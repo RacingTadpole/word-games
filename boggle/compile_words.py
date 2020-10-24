@@ -1,6 +1,7 @@
 from typing import Optional
 from copy import deepcopy
 import pickle
+import time
 # import json
 
 from .types import Tree
@@ -33,9 +34,14 @@ def compile_words(path: str, outpath: str = None, words: Optional[Tree] = None) 
         outpath = f'{stem}-compiled.pkl'
     if words is None:
         words = {}
+    last_time = time.time()
     with open(path, 'r') as f:
-        for word in f:
-            words = add_to_words_subtree(words, word)
+        for i, word in enumerate(f):
+            if i % 500 == 0:
+                now = time.time()
+                print(i, word.strip(), f'{(now - last_time):3.3}')
+                last_time = now
+            words = add_to_words_subtree(words, word.strip())
     # print(json.dumps(words, indent=2))
 
     with open(outpath, 'wb') as f:
