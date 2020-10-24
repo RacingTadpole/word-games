@@ -1,9 +1,9 @@
-from typing import Dict, Any, Optional
+from typing import Optional
 from copy import deepcopy
 import pickle
 # import json
 
-Tree = Dict[str, Any]
+from .types import Tree
 
 def add_to_words_subtree(words_subtree: Tree, rest_of_word: str) -> Tree:
     """
@@ -42,4 +42,4 @@ def compile_words(path: str, outpath: str = None, words: Optional[Tree] = None) 
         pickle.dump(words, f)
 
 if __name__ == '__main__':
-    compile_words('./data/short-words.txt')
+    compile_words('./data/words-1.txt')
