@@ -2,7 +2,9 @@
 Run with:
     python -m boggle.boggle
 """
-from typing import Iterable, Sequence, Tuple
+from typing import Counter, Iterable, Sequence, Tuple
+from math import floor
+from collections import Counter
 import pickle
 
 from boggle.boggle_types import Tree, Position, Board
@@ -58,14 +60,28 @@ def find_words(board: Board, words_subtree: Tree, trail: Tuple[Position, ...] = 
         if next_letter in words_subtree:
             yield from find_words(board, words_subtree[next_letter], trail + (next_position, ))
 
+def pretty_print(words: Sequence[str], width = 120) -> None:
+    space = max(len(word) for word in words) + 3
+    num_columns = floor(width / space)
+    diced_words = (words[i:i + num_columns] for i in range(0, len(words), num_columns))
+    print('\n'.join(''.join(word.rjust(space) for word in sublist) for sublist in diced_words))
+    print()
+
 if __name__ == '__main__':
     # board = ["rfsem", "rfsem", "tsaoj", "tilft", "octhr"]
-    # Eg. Enter: rfsem,rfsem,tsaoj,tilft,octhr
-    board = input('Enter a board with commas between rows: ').lower().split(',')
+    # Eg. Enter: rfsem,rante,tsaoj,tilft,octhr
+    board = input('\nEnter a board with commas between rows: ').lower().replace(' ','').split(',')
+    print()
+    for row in board:
+        print(f'\t\t{row.upper()}')
     with open('./data/words-compiled.pkl', 'rb') as f:
         words = pickle.load(f)
     found_words = tuple(word for word in find_words(board, words) if len(word) >= 4)
     found_unique_words = tuple(word for i, word in enumerate(found_words) if i == 0 or word not in found_words[:i])
-    print('\n'.join(found_unique_words))
-    number = len(found_unique_words)
-    print(f'\nFound {number} different words\n')
+
+    counts = Counter([len(word) for word in found_unique_words])
+    print()
+    print('  |  '.join(f'{l} letters: {count}' for l, count in counts.items()))
+    print()
+    pretty_print(found_unique_words)
+    print(f'Total: {len(found_unique_words)} words\n')
