@@ -13,3 +13,4 @@ htmlcov/
 site/
 .vscode/
 .ipynb_checkpoints/
+data/
