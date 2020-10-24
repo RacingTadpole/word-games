@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import os
+
+OLD_NAME = 'python_workshop'
+
+
+def replace_text(
+        path: str,
+        old_name: str,
+        old_name_dash: str,
+        new_name: str,
+        new_name_dash: str,
+) -> None:
+    with open(path, 'r') as f:
+        text = f.read()
+    new_text = text.replace(old_name, new_name).replace(old_name_dash, new_name_dash)
+    with open(path, 'w') as f:
+        f.write(new_text)
+    print('Updated', path)
+
+
+def change_name(old_name: str, new_name: str) -> None:
+    new_name_dash = new_name.replace('_', '-')
+    old_name_dash = old_name.replace('_', '-')
+
+    replace_text('README.md', old_name, old_name_dash, new_name, new_name_dash)
+    replace_text('CHANGELOG.md', old_name, old_name_dash, new_name, new_name_dash)
+    replace_text('setup.py', old_name, old_name_dash, new_name, new_name_dash)
+    replace_text(os.path.join('bin', 'check_code'), old_name, old_name_dash, new_name, new_name_dash)
+
+    os.rename(os.path.join('..', old_name_dash), os.path.join('..', new_name_dash))
+    print(f'Renamed the enclosing {old_name_dash} directory')
+
+    os.rename(old_name, new_name)
+    print(f'Renamed the {old_name_dash} subdirectory')
+
+    print("""
+    To finish the renaming, please do the following:
+    1. `rm -rf .git`
+    2. Update `README.md`
+    3. Update the description and author in `setup.py`
+    4. `git init && git add --all && git commit -m 'initial commit'`
+    """)
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser(
+        formatter_class=ArgumentDefaultsHelpFormatter,
+        description='Change the name of this example'
+    )
+    parser.add_argument('new',
+                        help='The new name, using underscores to separate words')
+    parser.add_argument('--old', '-o', default=OLD_NAME,
+                        help='The old name, using underscores to separate words')
+
+    args = parser.parse_args()
+    change_name(args.old, args.new)

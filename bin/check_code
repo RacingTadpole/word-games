@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# A shell script to run various checks over the code.
+# Run with:
+#    ./bin/check_code
+# Note pytest only runs the docstring tests if you have them enabled in the "pytest.ini" file.
+
+echo Checking code complexity... \
+&& radon_result=`radon cc boggle -o SCORE -s -a --min C` \
+&& if [[ $radon_result ]];
+    then
+        echo "\n$radon_result"
+        echo "\nCode complexity check failed\n"
+        exit -1;
+    else
+        echo "Code complexity check passed"
+    fi \
+&& echo Checking types... \
+&& mypy boggle --ignore-missing-imports --strict-optional --disallow-untyped-defs \
+&& echo Type check passed \
+&& python -m pytest --cov=boggle -rxs  # show coverage report, and give reasons for xfails.
+
+# For a fuller test coverage report, use
+#   pytest --cov-report html --cov=boggle ; open htmlcov/index.html
