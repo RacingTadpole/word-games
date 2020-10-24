@@ -1,32 +1,11 @@
+"""
+Run with:
+    python -m boggle.boggle
+"""
 from typing import Iterable, Sequence, Tuple
-from .types import Tree, Position, Board
+import pickle
 
-def is_word_or_start(s: str, words: Tree) -> Tuple[bool, bool]:
-    """
-    Not used.
-    >>> words = {'b': {'a': {'r': {'.': None, 'n': {'.': None}}}}, 'a': {'m': {'.': None}}}
-    >>> is_word_or_start('b', words)
-    (False, True)
-    >>> is_word_or_start('ba', words)
-    (False, True)
-    >>> is_word_or_start('bar', words)
-    (True, True)
-    >>> is_word_or_start('barn', words)
-    (True, False)
-    >>> is_word_or_start('bag', words)
-    (False, False)
-    >>> is_word_or_start('cat', words)
-    (False, False)
-    >>> is_word_or_start('am', words)
-    (True, False)
-    """
-    for letter in s:
-        if letter in words:
-            words = words[letter]
-        else:
-            return (False, False)
-    is_word = '.' in words
-    return (is_word, len(words) > (1 if is_word else 0))
+from boggle.boggle_types import Tree, Position, Board
 
 def get_all_positions(board: Board) -> Sequence[Position]:
     """
@@ -78,3 +57,15 @@ def find_words(board: Board, words_subtree: Tree, trail: Tuple[Position, ...] = 
         next_letter = next_position[2]
         if next_letter in words_subtree:
             yield from find_words(board, words_subtree[next_letter], trail + (next_position, ))
+
+if __name__ == '__main__':
+    # board = ["rfsem", "rfsem", "tsaoj", "tilft", "octhr"]
+    # Eg. Enter: rfsem,rfsem,tsaoj,tilft,octhr
+    board = input('Enter a board with commas between rows: ').lower().split(',')
+    with open('./data/words-compiled.pkl', 'rb') as f:
+        words = pickle.load(f)
+    found_words = tuple(word for word in find_words(board, words) if len(word) >= 4)
+    found_unique_words = tuple(word for i, word in enumerate(found_words) if i == 0 or word not in found_words[:i])
+    print('\n'.join(found_unique_words))
+    number = len(found_unique_words)
+    print(f'\nFound {number} different words\n')

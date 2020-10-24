@@ -23,10 +23,7 @@ EMAIL = 'arthurstreet@yahoo.com'
 AUTHOR = 'Arthur Street'
 
 # What packages are required for this module to be executed?
-REQUIRED = [
-    'attrs',
-    'pandas',
-]
+REQUIRED = []
 
 # You can install using eg. `pip install boggle[dev]==1.0.1`.
 EXTRAS = {

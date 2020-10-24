@@ -1,10 +1,8 @@
 from typing import Optional
-from copy import deepcopy
 import pickle
-import time
 # import json
 
-from .types import Tree
+from boggle.boggle_types import Tree
 
 def add_to_words_subtree(words_subtree: Tree, rest_of_word: str) -> Tree:
     """
@@ -24,9 +22,9 @@ def add_to_words_subtree(words_subtree: Tree, rest_of_word: str) -> Tree:
     if len(rest_of_word) == 0:
         return {'.': None}
     letter = rest_of_word[0]
-    subtree_copy = deepcopy(words_subtree)
-    subtree_copy[letter] = add_to_words_subtree(words_subtree.get(letter, {}), rest_of_word[1:])
-    return subtree_copy
+    next_subtree = words_subtree.get(letter, {})
+    words_subtree[letter] = add_to_words_subtree(next_subtree, rest_of_word[1:])
+    return words_subtree
 
 def compile_words(path: str, outpath: str = None, words: Optional[Tree] = None) -> None:
     if outpath is None:
@@ -34,18 +32,16 @@ def compile_words(path: str, outpath: str = None, words: Optional[Tree] = None) 
         outpath = f'{stem}-compiled.pkl'
     if words is None:
         words = {}
-    last_time = time.time()
     with open(path, 'r') as f:
-        for i, word in enumerate(f):
-            if i % 500 == 0:
-                now = time.time()
-                print(i, word.strip(), f'{(now - last_time):3.3}')
-                last_time = now
-            words = add_to_words_subtree(words, word.strip())
+        for word_with_return in f:
+            word = word_with_return.strip()
+            words = add_to_words_subtree(words, word)
     # print(json.dumps(words, indent=2))
 
     with open(outpath, 'wb') as f:
         pickle.dump(words, f)
 
 if __name__ == '__main__':
-    compile_words('./data/words-1.txt')
+    # with open('./data/words-compiled.pkl', 'rb') as f:
+    #     words = pickle.load(f)
+    compile_words('./data/words.txt') # , words=words)
