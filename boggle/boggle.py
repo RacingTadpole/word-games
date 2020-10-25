@@ -2,14 +2,14 @@
 Run with:
     python -m boggle.boggle
 """
-from typing import Counter, Iterable, Sequence, Tuple
+from boggle.compile_words import read_words
+from typing import Sequence, Tuple, Iterator, Dict
 from math import floor
 from collections import Counter
-import pickle
 
-from boggle.boggle_types import Tree, Position, Board
+from boggle.boggle_types import Position, Board
 
-def get_all_positions(board: Board) -> Sequence[Position]:
+def get_all_positions(board: Board) -> Iterator[Position]:
     """
     >>> tuple(get_all_positions(['ab','cd','ef']))
     ((0, 0, 'a'), (0, 1, 'b'), (1, 0, 'c'), (1, 1, 'd'), (2, 0, 'e'), (2, 1, 'f'))
@@ -18,7 +18,7 @@ def get_all_positions(board: Board) -> Sequence[Position]:
         for col_number, letter in enumerate(row):
             yield (row_number, col_number, letter)
 
-def get_unused_neighbours(board: Board, trail: Sequence[Position]) -> Iterable[Position]:
+def get_unused_neighbours(board: Board, trail: Sequence[Position]) -> Iterator[Position]:
     """
     >>> trail = ((0, 1, 'a'), (1, 2, 'd'))
     >>> tuple(get_unused_neighbours(['zab','zcd','zef'], trail))
@@ -43,7 +43,7 @@ def get_word_from_trail(trail: Tuple[Position, ...]) -> str:
     """
     return ''.join(position[2] for position in trail)
 
-def find_words(board: Board, words_subtree: Tree, trail: Tuple[Position, ...] = None) -> Sequence[str]:
+def find_words(board: Board, words_subtree: Dict, trail: Tuple[Position, ...] = None) -> Iterator[str]:
     """
     >>> board = ('ab','cd','ef')
     >>> words = {'b': {'a': {'d': {'.': None, 'e': {'.': None}}}}, 'a': {'c': {'e': {'.': None}}}}
@@ -60,7 +60,7 @@ def find_words(board: Board, words_subtree: Tree, trail: Tuple[Position, ...] = 
         if next_letter in words_subtree:
             yield from find_words(board, words_subtree[next_letter], trail + (next_position, ))
 
-def pretty_print(words: Sequence[str], width = 120) -> None:
+def pretty_print(words: Sequence[str], width: int = 120) -> None:
     space = max(len(word) for word in words) + 3
     num_columns = floor(width / space)
     diced_words = (words[i:i + num_columns] for i in range(0, len(words), num_columns))
@@ -70,12 +70,13 @@ def pretty_print(words: Sequence[str], width = 120) -> None:
 if __name__ == '__main__':
     # board = ["rfsem", "rfsem", "tsaoj", "tilft", "octhr"]
     # Eg. Enter: rfsem,rante,tsaoj,tilft,octhr
+    path = './data/words.txt'
+    words = read_words(path)
+
     board = input('\nEnter a board with commas between rows: ').lower().replace(' ','').split(',')
     print()
     for row in board:
         print(f'\t\t{row.upper()}')
-    with open('./data/words-compiled.pkl', 'rb') as f:
-        words = pickle.load(f)
     found_words = tuple(word for word in find_words(board, words) if len(word) >= 4)
     found_unique_words = tuple(word for i, word in enumerate(found_words) if i == 0 or word not in found_words[:i])
 

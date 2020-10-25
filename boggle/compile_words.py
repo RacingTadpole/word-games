@@ -1,10 +1,7 @@
-from typing import Optional
+from typing import Optional, Union, Dict
 import pickle
-# import json
 
-from boggle.boggle_types import Tree
-
-def add_to_words_subtree(words_subtree: Tree, rest_of_word: str) -> Tree:
+def add_to_words_subtree(words_subtree: Dict, rest_of_word: str) -> Dict:
     """
     >>> add_to_words_subtree({}, 'b')
     {'b': {'.': None}}
@@ -26,22 +23,21 @@ def add_to_words_subtree(words_subtree: Tree, rest_of_word: str) -> Tree:
     words_subtree[letter] = add_to_words_subtree(next_subtree, rest_of_word[1:])
     return words_subtree
 
-def compile_words(path: str, outpath: str = None, words: Optional[Tree] = None) -> None:
-    if outpath is None:
-        stem = '.'.join(path.split('.')[:-1])
-        outpath = f'{stem}-compiled.pkl'
-    if words is None:
-        words = {}
+def read_words(path: str, words: Optional[Dict] = None) -> Dict:
+    updated_words = {} if words is None else words
     with open(path, 'r') as f:
         for word_with_return in f:
             word = word_with_return.strip()
-            words = add_to_words_subtree(words, word)
-    # print(json.dumps(words, indent=2))
+            updated_words = add_to_words_subtree(updated_words, word)
+    return updated_words
 
+def write_compiled(words: Dict, outpath: str) -> None:
     with open(outpath, 'wb') as f:
         pickle.dump(words, f)
 
 if __name__ == '__main__':
-    # with open('./data/words-compiled.pkl', 'rb') as f:
-    #     words = pickle.load(f)
-    compile_words('./data/words.txt') # , words=words)
+    path = './data/words.txt'
+    words = read_words(path)
+    stem = {'.': None}.join(path.split({'.': None})[:-1])
+    outpath = f'{stem}-compiled.pkl'
+    write_compiled(words, outpath)
