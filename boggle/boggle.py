@@ -49,6 +49,9 @@ def find_words(board: Board, words_subtree: Dict, trail: Tuple[Position, ...] = 
     >>> words = {'b': {'a': {'d': {'.': None, 'e': {'.': None}}}}, 'a': {'c': {'e': {'.': None}}}}
     >>> tuple(find_words(board, words))
     ('ace', 'bad', 'bade')
+    >>> board = ('ab','cd','fg')
+    >>> tuple(find_words(board, words))
+    ('bad',)
     """
     if trail is None:
         trail = ()
@@ -73,16 +76,17 @@ if __name__ == '__main__':
     path = './data/words.txt'
     words = read_words(path)
 
-    board = input('\nEnter a board with commas between rows: ').lower().replace(' ','').split(',')
-    print()
-    for row in board:
-        print(f'\t\t{row.upper()}')
-    found_words = tuple(word for word in find_words(board, words) if len(word) >= 4)
-    found_unique_words = tuple(word for i, word in enumerate(found_words) if i == 0 or word not in found_words[:i])
+    while True:
+        board = input('\nEnter a board with commas between rows: ').lower().replace(' ','').split(',')
+        print()
+        for row in board:
+            print(f'\t\t{row.upper()}')
+        found_words = tuple(word for word in find_words(board, words) if len(word) >= 4)
+        found_unique_words = tuple(word for i, word in enumerate(found_words) if i == 0 or word not in found_words[:i])
 
-    counts = Counter([len(word) for word in found_unique_words])
-    print()
-    print('  |  '.join(f'{l} letters: {count}' for l, count in counts.items()))
-    print()
-    pretty_print(found_unique_words)
-    print(f'Total: {len(found_unique_words)} words\n')
+        counts = Counter([len(word) for word in found_unique_words])
+        print()
+        print('  |  '.join(f'{l} letters: {count}' for l, count in counts.items()))
+        print()
+        pretty_print(found_unique_words)
+        print(f'Total: {len(found_unique_words)} words\n')
