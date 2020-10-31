@@ -1,5 +1,4 @@
-from typing import Optional, Union, Dict
-import pickle
+from typing import Optional, Dict
 
 def add_to_words_subtree(words_subtree: Dict, rest_of_word: str) -> Dict:
     """
@@ -30,14 +29,3 @@ def read_words(path: str, words: Optional[Dict] = None) -> Dict:
             word = word_with_return.strip()
             updated_words = add_to_words_subtree(updated_words, word)
     return updated_words
-
-def write_compiled(words: Dict, outpath: str) -> None:
-    with open(outpath, 'wb') as f:
-        pickle.dump(words, f)
-
-if __name__ == '__main__':
-    path = './data/words.txt'
-    words = read_words(path)
-    stem = {'.': None}.join(path.split({'.': None})[:-1])
-    outpath = f'{stem}-compiled.pkl'
-    write_compiled(words, outpath)
