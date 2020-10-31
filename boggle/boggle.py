@@ -18,10 +18,10 @@ def get_all_positions(board: Board) -> Iterator[Position]:
         for col_number, letter in enumerate(row):
             yield (row_number, col_number, letter)
 
-def get_unused_neighbours(board: Board, trail: Sequence[Position]) -> Iterator[Position]:
+def get_unused_neighbors(board: Board, trail: Sequence[Position]) -> Iterator[Position]:
     """
     >>> trail = ((0, 1, 'a'), (1, 2, 'd'))
-    >>> tuple(get_unused_neighbours(['zab','zcd','zef'], trail))
+    >>> tuple(get_unused_neighbors(['zab','zcd','zef'], trail))
     ((1, 1, 'c'), (2, 1, 'e'), (0, 2, 'b'), (2, 2, 'f'))
     """
     last = trail[-1]
@@ -57,7 +57,7 @@ def find_words(board: Board, words_subtree: Dict, trail: Tuple[Position, ...] = 
         trail = ()
     if '.' in words_subtree:
         yield get_word_from_trail(trail)
-    next_positions = get_all_positions(board) if len(trail) == 0 else get_unused_neighbours(board, trail)
+    next_positions = get_all_positions(board) if len(trail) == 0 else get_unused_neighbors(board, trail)
     for next_position in next_positions:
         next_letter = next_position[2]
         if next_letter in words_subtree:
