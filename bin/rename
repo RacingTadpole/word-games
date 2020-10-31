@@ -2,7 +2,7 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import os
 
-OLD_NAME = 'python_workshop'
+OLD_NAME = 'boggle'
 
 
 def replace_text(
@@ -28,6 +28,7 @@ def change_name(old_name: str, new_name: str) -> None:
     replace_text('CHANGELOG.md', old_name, old_name_dash, new_name, new_name_dash)
     replace_text('setup.py', old_name, old_name_dash, new_name, new_name_dash)
     replace_text(os.path.join('bin', 'check_code'), old_name, old_name_dash, new_name, new_name_dash)
+    replace_text(os.path.join('bin', 'rename'), old_name, old_name_dash, new_name, new_name_dash)
 
     os.rename(os.path.join('..', old_name_dash), os.path.join('..', new_name_dash))
     print(f'Renamed the enclosing {old_name_dash} directory')

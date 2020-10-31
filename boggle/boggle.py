@@ -78,15 +78,16 @@ if __name__ == '__main__':
 
     while True:
         board = input('\nEnter a board with commas between rows: ').lower().replace(' ','').split(',')
+        min_word_length = 3 if len(''.join(board)) <= 20 else 4
         print()
         for row in board:
             print(f'\t\t{row.upper()}')
-        found_words = tuple(word for word in find_words(board, words) if len(word) >= 4)
+        found_words = tuple(word for word in find_words(board, words) if len(word) >= min_word_length)
         found_unique_words = tuple(word for i, word in enumerate(found_words) if i == 0 or word not in found_words[:i])
 
         counts = Counter([len(word) for word in found_unique_words])
         print()
-        print('  |  '.join(f'{l} letters: {count}' for l, count in counts.items()))
+        print('  |  '.join(f'{l} letters: {count}' for l, count in sorted(counts.items())))
         print()
         pretty_print(found_unique_words)
         print(f'Total: {len(found_unique_words)} words\n')
