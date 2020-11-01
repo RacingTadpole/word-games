@@ -9,12 +9,12 @@ from typing import Dict, Sequence, Iterable, Optional, List, Tuple
 def get_neighbors(word: str, words: WordDict) -> Sequence[str]:
     """
     >>> words = {'?og': ['dog', 'log', 'fog'], 'd?g': ['dog', 'dig'], 'do?': ['dog'], 'l?g': ['log'], 'lo?': ['log']}
-    >>> get_neighbors('dig', words)
-    ('dog', 'dig')
-    >>> get_neighbors('fog', words)
-    ('dog', 'log', 'fog')
+    >>> sorted(get_neighbors('dig', words))
+    ['dig', 'dog']
+    >>> sorted(get_neighbors('fog', words))
+    ['dog', 'fog', 'log']
     """
-    return tuple(
+    return frozenset(
         neighbor
         for position in range(len(word))
         for neighbor in words.get(get_word_with_letter_missing(word, position), [])
@@ -26,16 +26,16 @@ class Rung:
     words: Iterable[str]
     path: Dict[str, Iterable[str]]
 
-def get_all_previous_words(rung: Rung) -> List[str]:
+def get_all_previous_words(rung: Rung) -> Tuple[str]:
     """
     >>> rung_0 = Rung(None, ['dig'], {})
     >>> path = {'dog': ('log', 'fog', 'dig', 'dug', 'don', 'dob'), 'fig': ('dig', 'fog', 'fin')}
     >>> words = ['dob', 'don', 'dug', 'fin', 'fog', 'log']
     >>> rung_1 = Rung(rung_0, words, path)
     >>> sorted(get_all_previous_words(rung_1))
-    ['dig', 'dob', 'don', 'dug', 'fin', 'fog', 'log']
+    ('dig', 'dob', 'don', 'dug', 'fin', 'fog', 'log')
     """
-    return list(rung.words) + (get_all_previous_words(rung.previous) if rung.previous else [])
+    return tuple(rung.words) + (get_all_previous_words(rung.previous) if rung.previous else ())
 
 def get_next_rung(previous_rung: Rung, words: WordDict) -> Rung:
     """
@@ -45,8 +45,8 @@ def get_next_rung(previous_rung: Rung, words: WordDict) -> Rung:
     ...     words = add_to_words_dict(words, w)
     >>> rung = Rung(None, ['dog', 'fig'], {})
     >>> next_rung = get_next_rung(rung, words)
-    >>> next_rung.path
-    {'dog': ('log', 'fog', 'dig', 'dug', 'don', 'dob'), 'fig': ('dig', 'fog', 'fin')}
+    >>> {k: sorted(v) for k,v in next_rung.path.items()}
+    {'dog': ['dig', 'dob', 'don', 'dug', 'fog', 'log'], 'fig': ['dig', 'fin', 'fog']}
     >>> sorted(next_rung.words)
     ['dig', 'dob', 'don', 'dug', 'fin', 'fog', 'log']
     """
@@ -82,16 +82,17 @@ def get_ladder(rung: Rung, word: str):
     previous_word = get_key_for_value(rung.path, word)
     return (get_ladder(rung.previous, previous_word) if rung.previous else [previous_word]) + [word]
 
-def get_start_and_target_words(words: WordDict) -> Tuple[str, str]:
+def input_start_and_target_words(words: WordDict) -> Tuple[str, str]:
     all_words = {w for word_list in words.values() for w in word_list}
 
     while True:
         start_word = input('Enter the starting word: ').lower()
-        rung = Rung(None, [start_word], {})
-        rung = get_next_rung(rung, words)
-        if len(rung.words):
+        neighbors = get_neighbors(start_word, words)
+        if len(neighbors) > 1:
             break
         print(f'Sorry, there are no words next to "{start_word}". Choose another word.')
+    if start_word not in all_words:
+        print("(That word is not in the dictionary, but that's ok.)")
 
     while True:
         target_word = input('Enter the target word (if any): ').lower()
@@ -103,7 +104,7 @@ def get_start_and_target_words(words: WordDict) -> Tuple[str, str]:
             else:
                 print('Please choose a target word with the same length as the start word.')
         else:
-            print('Please choose a word in the dictionary.')
+            print('You need to choose a target word that is in the dictionary.')
     return (start_word, target_word)
 
 
@@ -111,10 +112,10 @@ if __name__ == '__main__':
     path = './data/words.txt'
     words = read_words(path)
 
-    start_word, target_word = get_start_and_target_words(words)
+    start_word, target_word = input_start_and_target_words(words)
     rung = Rung(None, [start_word], {})
 
-    counter = 0
+    counter = 1
     while target_word not in rung.words and len(rung.words) > 0:
         rung = get_next_rung(rung, words)
         counter += 1
