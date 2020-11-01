@@ -78,7 +78,11 @@ if __name__ == '__main__':
 
     while True:
         board = input('\nEnter a board with commas between rows: ').lower().replace(' ','').split(',')
-        min_word_length = 3 if len(''.join(board)) <= 20 else 4
+        board_size = len(''.join(board))
+        if board_size < 2:
+            print('Goodbye!')
+            exit()
+        min_word_length = 3 if board_size <= 20 else 4
         print()
         for row in board:
             print(f'\t\t{row.upper()}')
@@ -89,5 +93,8 @@ if __name__ == '__main__':
         print()
         print('  |  '.join(f'{l} letters: {count}' for l, count in sorted(counts.items())))
         print()
-        pretty_print(found_unique_words)
-        print(f'Total: {len(found_unique_words)} words\n')
+        if found_unique_words:
+            pretty_print(found_unique_words)
+            print(f'Total: {len(found_unique_words)} words\n')
+        else:
+            print('No words found!')

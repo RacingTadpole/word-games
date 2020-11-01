@@ -1,4 +1,4 @@
-# Word game solver
+# Word game solvers
 
 ## Boggle
 
@@ -105,13 +105,13 @@ Save as `words.txt` in the `data` directory.
 Just type one of:
 
 ```
-python -m boggle.boggle
+python -m boggle.solve
 ```
 
 or
 
 ```
-python -m word_ladder.word_ladder
+python -m word_ladder.solve
 ```
 
 ### Run the tests

@@ -16,8 +16,8 @@ import os
 from setuptools import setup, find_packages
 
 # Package meta-data.
-NAME = 'boggle'
-DESCRIPTION = 'Boggle word finder'
+NAME = 'word_games'
+DESCRIPTION = 'Word game solver'
 # URL = 'https://github.com/me/myproject'
 EMAIL = 'arthurstreet@yahoo.com'
 AUTHOR = 'Arthur Street'
@@ -61,16 +61,16 @@ setup(
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,
-    package_data={'boggle': ['LICENSE.txt',]},
+    package_data={'word_games': ['LICENSE',]},
     license='Unknown',
     classifiers=[
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
         'License :: Other/Proprietary License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: Implementation :: CPython'
     ],
     # $ setup.py publish support.

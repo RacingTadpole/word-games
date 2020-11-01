@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-boggle = {editable = true,path = "."}
+word_games = {editable = true,path = "."}
 
 [dev-packages]
 "pytest-cov" = "*"
@@ -15,4 +15,4 @@ radon = "*"
 pycodestyle = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"
