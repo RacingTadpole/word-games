@@ -27,6 +27,7 @@ def change_name(old_name: str, new_name: str) -> None:
     replace_text('README.md', old_name, old_name_dash, new_name, new_name_dash)
     replace_text('CHANGELOG.md', old_name, old_name_dash, new_name, new_name_dash)
     replace_text('setup.py', old_name, old_name_dash, new_name, new_name_dash)
+    replace_text('Pipfile', old_name, old_name_dash, new_name, new_name_dash)
     replace_text(os.path.join('bin', 'check_code'), old_name, old_name_dash, new_name, new_name_dash)
     replace_text(os.path.join('bin', 'rename'), old_name, old_name_dash, new_name, new_name_dash)
 
