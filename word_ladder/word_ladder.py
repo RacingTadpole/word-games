@@ -33,7 +33,7 @@ def get_all_previous_words(rung: Rung) -> Tuple[str]:
     >>> words = ['dob', 'don', 'dug', 'fin', 'fog', 'log']
     >>> rung_1 = Rung(rung_0, words, path)
     >>> sorted(get_all_previous_words(rung_1))
-    ('dig', 'dob', 'don', 'dug', 'fin', 'fog', 'log')
+    ['dig', 'dob', 'don', 'dug', 'fin', 'fog', 'log']
     """
     return tuple(rung.words) + (get_all_previous_words(rung.previous) if rung.previous else ())
 
@@ -72,15 +72,18 @@ def get_key_for_value(d: Dict[str, Iterable[str]], value: str) -> str:
 
 def get_ladder(rung: Rung, word: str):
     """
-    >>> rung_0 = Rung(None, ['dig'], {'dig': ('dog', 'log')})
-    >>> path = {'dog': ('log', 'fog', 'dig', 'dug', 'don', 'dob'), 'fig': ('dig', 'fog', 'fin')}
+    >>> rung_0 = Rung(None, ['dig'], {})
+    >>> rung_1 = Rung(rung_0, ['dog', 'log'], {'dig': ('dog', 'log', 'fig')})
     >>> words = ['dig', 'dob', 'don', 'dug', 'fin', 'fog', 'log']
-    >>> rung_1 = Rung(rung_0, words, path)
-    >>> get_ladder(rung_1, 'fin')
+    >>> path = {'dog': ('log', 'fog', 'dig', 'dug', 'don', 'dob'), 'fig': ('dig', 'fog', 'fin')}
+    >>> rung_2 = Rung(rung_1, words, path)
+    >>> get_ladder(rung_2, 'fin')
     ['dig', 'fig', 'fin']
     """
     previous_word = get_key_for_value(rung.path, word)
-    return (get_ladder(rung.previous, previous_word) if rung.previous else [previous_word]) + [word]
+    if rung.previous:
+        return get_ladder(rung.previous, previous_word) + [word]
+    return [word]
 
 def input_start_and_target_words(words: WordDict) -> Tuple[str, str]:
     all_words = {w for word_list in words.values() for w in word_list}
@@ -119,14 +122,19 @@ if __name__ == '__main__':
     while target_word not in rung.words and len(rung.words) > 0:
         rung = get_next_rung(rung, words)
         counter += 1
-        print(f'Round {counter}: {len(rung.words):3} possible words, eg. {", ".join(sorted(rung.words)[:6])}')
+        if rung.words:
+            print(f'Round {counter}: {len(rung.words):3} possible words, eg. {", ".join(sorted(rung.words)[:6])}')
 
     if len(rung.words) == 0:
         if (target_word):
             print('Could not do it!')
-        print(f'Final words: {", ".join(sorted(rung.previous.words))}')
-        exit()
+        rung = rung.previous
+        if not rung:
+            exit()
+        print(f'Final words: {", ".join(sorted(rung.words))}')
+        # Show the results for one of these words.
+        target_word = list(rung.words)[0]
 
     print()
-    print(' → '.join([f'{w}' for w in get_ladder(rung, target_word)]))
+    print(' → '.join(get_ladder(rung, target_word)))
     print()

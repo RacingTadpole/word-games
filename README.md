@@ -1,4 +1,6 @@
-# Boggle
+# Word game solver
+
+## Boggle
 
 Discover all the words in your Boggle board!
 
@@ -40,6 +42,29 @@ Enter a board with commas between rows: racin,gtadp,olera,cingt,adpol
 Total: 241 words
 ```
 
+## Word Ladder
+
+Solve the word ladder game, where you provide two words
+of the same length, and need to change one word into the other, changing
+only one letter at a time, while only forming valid words.
+
+```
+Enter the starting word: party
+Enter the target word (if any): grows
+
+party → parts → ports → sorts → soots → slots → slows → glows → grows
+```
+
+Or find the hardest words you can from a given starting word, eg.
+```
+Enter the starting word: party
+Enter the target word (if any):
+
+Final words: above, aloud, anode
+
+party → pasty → paste → passe → posse → poise → prise → prose → prone → crone → clone → alone → aline → amine → amide → abide → abode → above
+```
+
 ## Quick start
 
 ### Install Python and pipenv
@@ -72,12 +97,18 @@ Eg. http://www.mieliestronk.com/wordlist.html . Use lower-case.
 
 Save as `words.txt` in the `data` directory.
 
-### Discover all the words in your Boggle board
+### Run
 
-Just type:
+Just type one of:
 
 ```
 python -m boggle.boggle
+```
+
+or
+
+```
+python -m word_ladder.word_ladder
 ```
 
 ### Run the tests
