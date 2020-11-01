@@ -110,31 +110,34 @@ def input_start_and_target_words(words: WordDict) -> Tuple[str, str]:
             print('You need to choose a target word that is in the dictionary.')
     return (start_word, target_word)
 
-
-if __name__ == '__main__':
-    path = './data/words.txt'
-    words = read_words(path)
-
-    start_word, target_word = input_start_and_target_words(words)
+def build_rungs(start_word, target_word, words) -> Rung:
     rung = Rung(None, [start_word], {})
-
     counter = 1
     while target_word not in rung.words and len(rung.words) > 0:
         rung = get_next_rung(rung, words)
         counter += 1
         if rung.words:
             print(f'Round {counter}: {len(rung.words):3} possible words, eg. {", ".join(sorted(rung.words)[:6])}')
+    return rung
 
-    if len(rung.words) == 0:
+if __name__ == '__main__':
+    path = './data/words.txt'
+    words = read_words(path)
+
+    start_word, target_word = input_start_and_target_words(words)
+
+    final_rung = build_rungs(start_word, target_word, words)
+
+    if len(final_rung.words) == 0:
         if (target_word):
             print('Could not do it!')
-        rung = rung.previous
-        if not rung:
+        final_rung = final_rung.previous
+        if not final_rung:
             exit()
-        print(f'Final words: {", ".join(sorted(rung.words))}')
-        # Show the results for one of these words.
-        target_word = list(rung.words)[0]
+        print(f'Final words: {", ".join(sorted(final_rung.words))}')
+        # Show the results for one of the words we could get to.
+        target_word = list(final_rung.words)[0]
 
     print()
-    print(' → '.join(get_ladder(rung, target_word)))
+    print(' → '.join(get_ladder(final_rung, target_word)))
     print()
