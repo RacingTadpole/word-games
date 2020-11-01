@@ -3,7 +3,7 @@ from word_ladder.types import WordDict
 from word_ladder.utilities import get_word_with_letter_missing
 
 from dataclasses import dataclass
-from typing import Dict, Sequence, Iterable, Optional, List, Tuple
+from typing import Dict, Sequence, Iterable, Optional, Iterator, Tuple, List
 
 
 def get_neighbors(word: str, words: WordDict) -> Sequence[str]:
@@ -58,32 +58,37 @@ def get_next_rung(previous_rung: Rung, words: WordDict) -> Rung:
     word_soup = frozenset(w for these_words in path.values() for w in these_words)
     return Rung(previous_rung, word_soup, path)
 
-def get_key_for_value(d: Dict[str, Iterable[str]], value: str) -> str:
+def keys_for_value(d: Dict[str, Iterable[str]], value: str) -> Iterator[str]:
     """
-    >>> d = {'a': ['x', 'y', 'z'], 'b': ['l', 'm'], 'c': ['t', 'u']}
-    >>> get_key_for_value(d, 'y')
-    'a'
-    >>> get_key_for_value(d, 'u')
-    'c'
+    >>> d = {'a': ['x', 'y', 'z'], 'b': ['l', 'm', 'z'], 'c': ['t', 'u']}
+    >>> list(keys_for_value(d, 'y'))
+    ['a']
+    >>> list(keys_for_value(d, 'u'))
+    ['c']
+    >>> list(keys_for_value(d, 'z'))
+    ['a', 'b']
     """
     for key, values in d.items():
         if value in values:
-            return key
+            yield key
 
-def get_ladder(rung: Rung, word: str):
+def get_ladders(rung: Rung, word: str) -> Sequence[List[str]]:
     """
     >>> rung_0 = Rung(None, ['dig'], {})
-    >>> rung_1 = Rung(rung_0, ['dog', 'log'], {'dig': ('dog', 'log', 'fig')})
-    >>> words = ['dig', 'dob', 'don', 'dug', 'fin', 'fog', 'log']
-    >>> path = {'dog': ('log', 'fog', 'dig', 'dug', 'don', 'dob'), 'fig': ('dig', 'fog', 'fin')}
+    >>> rung_1 = Rung(rung_0, ['dog', 'log', 'fig', 'din'], {'dig': ('dog', 'log', 'fig', 'din')})
+    >>> words = ['dig', 'dob', 'don', 'dug', 'fin', 'fog', 'log', 'din']
+    >>> path = {'dog': ('log', 'fog', 'dig', 'dug', 'don', 'dob'), 'fig': ('dig', 'fog', 'fin'), 'din': ('dig', 'fin')}
     >>> rung_2 = Rung(rung_1, words, path)
-    >>> get_ladder(rung_2, 'fin')
-    ['dig', 'fig', 'fin']
+    >>> get_ladders(rung_2, 'fin')
+    [['dig', 'fig', 'fin'], ['dig', 'din', 'fin']]
     """
-    previous_word = get_key_for_value(rung.path, word)
-    if rung.previous:
-        return get_ladder(rung.previous, previous_word) + [word]
-    return [word]
+    if not rung.previous:
+        return [[word]]
+    return [
+        ladder + [word]
+        for previous_word in keys_for_value(rung.path, word)
+        for ladder in get_ladders(rung.previous, previous_word)
+    ]
 
 def input_start_and_target_words(words: WordDict) -> Tuple[str, str]:
     all_words = {w for word_list in words.values() for w in word_list}
@@ -139,5 +144,8 @@ if __name__ == '__main__':
         target_word = list(final_rung.words)[0]
 
     print()
-    print(' → '.join(get_ladder(final_rung, target_word)))
+    ladders = get_ladders(final_rung, target_word)
+    print(f'{len(ladders)} optimal solution(s) of length {len(ladders[0])} found:')
+    for ladder in ladders:
+        print(' → '.join(ladder))
     print()

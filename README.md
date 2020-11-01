@@ -52,6 +52,8 @@ only one letter at a time, while only forming valid words.
 Enter the starting word: party
 Enter the target word (if any): grows
 
+2 optimal solution(s) of length 9 found:
+party → parts → carts → carps → corps → coops → crops → crows → grows
 party → parts → ports → sorts → soots → slots → slows → glows → grows
 ```
 
@@ -62,6 +64,7 @@ Enter the target word (if any):
 
 Final words: above, aloud, anode
 
+1 optimal solution(s) of length 18 found:
 party → pasty → paste → passe → posse → poise → prise → prose → prone → crone → clone → alone → aline → amine → amide → abide → abode → above
 ```
 
