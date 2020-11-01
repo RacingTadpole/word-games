@@ -3,7 +3,7 @@ from word_ladder.types import WordDict
 from word_ladder.utilities import get_word_with_letter_missing
 
 from dataclasses import dataclass
-from typing import Dict, Sequence, Iterable, Optional, List
+from typing import Dict, Sequence, Iterable, Optional, List, Tuple
 
 
 def get_neighbors(word: str, words: WordDict) -> Sequence[str]:
@@ -82,23 +82,50 @@ def get_ladder(rung: Rung, word: str):
     previous_word = get_key_for_value(rung.path, word)
     return (get_ladder(rung.previous, previous_word) if rung.previous else [previous_word]) + [word]
 
+def get_start_and_target_words(words: WordDict) -> Tuple[str, str]:
+    all_words = {w for word_list in words.values() for w in word_list}
+
+    while True:
+        start_word = input('Enter the starting word: ').lower()
+        rung = Rung(None, [start_word], {})
+        rung = get_next_rung(rung, words)
+        if len(rung.words):
+            break
+        print(f'Sorry, there are no words next to "{start_word}". Choose another word.')
+
+    while True:
+        target_word = input('Enter the target word (if any): ').lower()
+        if len(target_word) == 0:
+            break
+        if target_word in all_words:
+            if len(target_word) == len(start_word):
+                break
+            else:
+                print('Please choose a target word with the same length as the start word.')
+        else:
+            print('Please choose a word in the dictionary.')
+    return (start_word, target_word)
+
 
 if __name__ == '__main__':
     path = './data/words.txt'
     words = read_words(path)
 
-    start_word = input('Enter the starting word: ').lower()
-    target_word = input('Enter the target word: ').lower()
-
+    start_word, target_word = get_start_and_target_words(words)
     rung = Rung(None, [start_word], {})
+
     counter = 0
     while target_word not in rung.words and len(rung.words) > 0:
         rung = get_next_rung(rung, words)
         counter += 1
-        print(f'Round {counter}: {len(rung.words)} possible words')
+        print(f'Round {counter}: {len(rung.words):3} possible words, eg. {", ".join(sorted(rung.words)[:6])}')
 
     if len(rung.words) == 0:
-        print('Could not do it!')
+        if (target_word):
+            print('Could not do it!')
+        print(f'Final words: {", ".join(sorted(rung.previous.words))}')
         exit()
-    
-    print(get_ladder(rung, target_word))
+
+    print()
+    print(' → '.join([f'{w}' for w in get_ladder(rung, target_word)]))
+    print()
