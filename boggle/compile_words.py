@@ -1,3 +1,4 @@
+from boggle.replacements import replace_special
 from typing import Optional, Dict
 
 def add_to_words_subtree(words_subtree: Dict, rest_of_word: str) -> Dict:
@@ -26,6 +27,6 @@ def read_words(path: str, words: Optional[Dict] = None) -> Dict:
     updated_words = {} if words is None else words
     with open(path, 'r') as f:
         for word_with_return in f:
-            word = word_with_return.strip()
+            word = replace_special(word_with_return.strip())
             updated_words = add_to_words_subtree(updated_words, word)
     return updated_words

@@ -2,6 +2,7 @@
 Run with:
     python -m boggle.boggle
 """
+from boggle.replacements import get_replacement_messages, restore_special
 from boggle.compile_words import read_words
 from typing import Sequence, Tuple, Iterator, Dict
 from math import floor
@@ -75,6 +76,9 @@ if __name__ == '__main__':
     # Eg. Enter: rfsem,rante,tsaoj,tilft,octhr
     path = './data/words.txt'
     words = read_words(path)
+    replacement_messages = get_replacement_messages()
+    print()
+    print('\n'.join(replacement_messages))
 
     while True:
         board = input('\nEnter a board with commas between rows: ').lower().replace(' ','').split(',')
@@ -87,7 +91,11 @@ if __name__ == '__main__':
         for row in board:
             print(f'\t\t{row.upper()}')
         found_words = tuple(word for word in find_words(board, words) if len(word) >= min_word_length)
-        found_unique_words = tuple(word for i, word in enumerate(found_words) if i == 0 or word not in found_words[:i])
+        found_unique_words = tuple(
+            restore_special(word)
+            for i, word in enumerate(found_words)
+            if i == 0 or word not in found_words[:i]
+        )
 
         counts = Counter([len(word) for word in found_unique_words])
         print()

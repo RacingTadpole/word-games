@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Sequence, Union
+from typing import Tuple, Sequence
 
 Position = Tuple[int, int, str]
 
