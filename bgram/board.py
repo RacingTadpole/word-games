@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, Optional, List
+from typing import Dict, Iterable, Optional, List, Sequence
 from dataclasses import dataclass
 from enum import Enum
 
@@ -27,18 +27,18 @@ def next_point(point: Point, direction: Direction, step: int = 1) -> Point:
 
 Board = Dict[Point, str]
 
-def gridded_board(board: Board) -> List[List[str]]:
+def gridded_board(board: Board) -> Sequence[Sequence[str]]:
     """
     >>> board = {Point(x=0, y=0): 'b', Point(x=0, y=1): 'a', Point(x=0, y=2): 'r', Point(x=1, y=1): 'x'}
     >>> gridded_board(board)
-    [['B', ' '], ['A', 'X'], ['R', ' ']]
+    (('B', ' '), ('A', 'X'), ('R', ' '))
     """
     min_x, min_y = min(p.x for p in board), min(p.y for p in board)
     max_x, max_y = max(p.x for p in board), max(p.y for p in board)
-    return [
-        [board.get(Point(x, y), ' ').upper() for x in range(min_x, max_x + 1)]
+    return tuple(
+        tuple(board.get(Point(x, y), ' ').upper() for x in range(min_x, max_x + 1))
         for y in range(min_y, max_y + 1)
-        ]
+        )
 
 def print_board(board: Board) -> None:
     """
