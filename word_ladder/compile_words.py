@@ -1,3 +1,8 @@
+"""
+Run with:
+    python -m word_ladder.solve
+"""
+
 from typing import Optional
 
 from word_ladder.types import WordDict
