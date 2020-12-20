@@ -1,6 +1,7 @@
-from typing import Dict, Iterable, Optional, List, Sequence
+from typing import Dict, Optional, Sequence
 from dataclasses import dataclass
 from enum import Enum
+from math import floor
 
 class Direction(Enum):
     RIGHT = 1
@@ -26,8 +27,9 @@ def next_point(point: Point, direction: Direction, step: int = 1) -> Point:
         return Point(point.x, point.y + step)
 
 Board = Dict[Point, str]
+Grid = Sequence[Sequence[str]]
 
-def gridded_board(board: Board) -> Sequence[Sequence[str]]:
+def gridded_board(board: Board) -> Grid:
     """
     >>> board = {Point(x=0, y=0): 'b', Point(x=0, y=1): 'a', Point(x=0, y=2): 'r', Point(x=1, y=1): 'x'}
     >>> gridded_board(board)
@@ -49,6 +51,34 @@ def print_board(board: Board) -> None:
     R 
     """
     print('\n'.join([''.join(x) for x in gridded_board(board)]))
+
+def print_grids(grids: Sequence[Grid], width: int = 100, padding: int = 3) -> None:
+    """
+    >>> board = {Point(x=0, y=0): 'b', Point(x=0, y=1): 'a', Point(x=0, y=2): 'r', Point(x=1, y=1): 'x'}
+    >>> board2 = {Point(x=0, y=0): 'b', Point(x=1, y=0): 'a', Point(x=2, y=0): 'r'}
+    >>> grid, grid2 = gridded_board(board), gridded_board(board2)
+    >>> print_grids([grid, grid, grid, grid2, grid])
+    B    B    B    BAR   B 
+    AX   AX   AX         AX
+    R    R    R          R 
+    <BLANKLINE>
+    >>> print_grids([grid, grid, grid, grid2, grid], 21)
+    B    B    B 
+    AX   AX   AX
+    R    R    R 
+    <BLANKLINE>
+    BAR   B 
+          AX
+          R 
+    <BLANKLINE>
+    """
+    max_width = max(len(grid) for grid in grids)
+    num = floor(width / (max_width + padding))
+    diced_grids = (grids[i:i + num] for i in range(0, len(grids), num))
+    for row_of_grids in diced_grids:
+        for i in range(max(len(grid) for grid in row_of_grids)):
+            print((' ' * padding).join(''.join(x for x in (grid[i] if len(grid) > i else ' ' * len(grid[0]))) for grid in row_of_grids))
+        print()
 
 def place_word(board: Board, where: Point, direction: Direction, word: str):
     """

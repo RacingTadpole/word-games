@@ -5,7 +5,7 @@ Run with:
 from bgram.compile_words import read_words
 from typing import Iterable, Tuple, Iterator, Dict
 
-from bgram.board import Board, Direction, next_point, new_board, board_with_word
+from bgram.board import Board, Direction, next_point, new_board, board_with_word, gridded_board, print_grids
 
 
 def excise_letter(letters: Iterable[str], letter: str) -> Iterable[str]:
@@ -63,13 +63,6 @@ def extended_boards(board: Board, words: Dict, letters: Iterable[str]) -> Iterat
     ...    print(new_letters, ':')
     ...    print_board(board)
     tre :
-      T 
-      R 
-      E 
-    FLEE
-      G 
-      G 
-    tre :
        T
        R
     FLEE
@@ -91,20 +84,26 @@ def extended_boards(board: Board, words: Dict, letters: Iterable[str]) -> Iterat
             if existing_letter in word:
                 for index in [i for i, l in enumerate(word) if l == existing_letter]:
                     for direction in [Direction.RIGHT, Direction.DOWN]:
-                        board2 = board_with_word(board, next_point(position, direction, -index), direction, word)
-                        if board2:
-                            yield board2, excise_letter(word, existing_letter)
+                        # Do not extend from a position with a letter already on the other side.
+                        if next_point(position, direction, -1) not in board:
+                            board2 = board_with_word(board, next_point(position, direction, -index), direction, word)
+                            if board2:
+                                # There must be a blank space at the end of the word.
+                                if next_point(position, direction, len(word) - index) not in board2:
+                                    yield board2, excise_letter(word, existing_letter)
 
 def solve_boards(board: Board, words: Dict, other_letters: Iterable[str]) -> Iterator[Board]:
     """
     >>> from bgram.compile_words import compile_words
-    >>> from bgram.board import gridded_board
     >>> boards = solve_boards({}, compile_words(), 'atlgfrgee')
     >>> grids = sorted(set(gridded_board(board) for board in boards))
-    >>> len(grids)
-    20
-    >>> example = (('T', 'R', 'E', 'E'), (' ', ' ', ' ', 'G'), ('F', 'L', 'A', 'G'))
-    >>> assert(example in grids)
+    >>> print_grids(grids)
+       F     F     F      T       T      F     TREE    TREE   T F   TF    TREE   TREE
+       L   T L     L      R       R     TL       G    FLAG    R L   RL       G   FLAG
+    TREE   R A   TREE     EGG   FLEA    RA    FLAG       G    E A   EA    FLAG      G
+      GA   EGG     AG   FLEA      EGG   EGG                   EGG   EGG              
+      G    E        G                   E                                            
+    <BLANKLINE>
     """
     if len(other_letters) == 0:
         yield board
@@ -118,4 +117,7 @@ if __name__ == '__main__':
     words = read_words(path)
 
     letters = input('\nEnter your starting letters: ').lower().replace(' ','')
-    solve_boards({}, words, letters)
+    boards = solve_boards({}, words, letters)
+    grids = sorted(set(gridded_board(board) for board in boards))
+    print(f'Found {len(grids)} boards')
+    print_grids(grids)
