@@ -85,12 +85,12 @@ def extended_boards(board: Board, words: Dict, letters: Iterable[str]) -> Iterat
                 for index in [i for i, l in enumerate(word) if l == existing_letter]:
                     for direction in [Direction.RIGHT, Direction.DOWN]:
                         # Do not extend from a position with a letter already on the other side.
-                        if next_point(position, direction, -1) not in board:
+                        # There must also be a blank space at the end of the word.
+                        if (next_point(position, direction, -1) not in board and
+                                next_point(position, direction, len(word) - index) not in board):
                             board2 = board_with_word(board, next_point(position, direction, -index), direction, word)
                             if board2:
-                                # There must be a blank space at the end of the word.
-                                if next_point(position, direction, len(word) - index) not in board2:
-                                    yield board2, excise_letter(word, existing_letter)
+                                yield board2, excise_letter(word, existing_letter)
 
 def solve_boards(board: Board, words: Dict, other_letters: Iterable[str]) -> Iterator[Board]:
     """

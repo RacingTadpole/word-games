@@ -38,11 +38,14 @@ def compile_words(word_list: Optional[Iterable[str]] = None) -> Dict:
 def read_words(path: str, words: Optional[Dict] = None) -> Dict:
     """
     Read words from a text file and compile them into the format we need.
+    Ignore words without any vowels (eg. dr and mrs).
     """
+    vowels = 'aeiouy'
     updated_words = {} if words is None else words
     with open(path, 'r') as f:
         for word_with_return in f:
-            word = word_with_return.strip()
-            updated_words = add_to_words_subtree(updated_words, word)
+            word = word_with_return.strip().lower()
+            if any(vowel in word for vowel in vowels):
+                updated_words = add_to_words_subtree(updated_words, word)
     return updated_words
 
