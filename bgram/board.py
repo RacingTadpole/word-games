@@ -1,4 +1,4 @@
-from typing import Dict, Optional, Sequence
+from typing import Dict, Iterator, Optional, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from math import floor
@@ -6,6 +6,11 @@ from math import floor
 class Direction(Enum):
     RIGHT = 1
     DOWN = 2
+
+side_direction = {
+    Direction.RIGHT: Direction.DOWN,
+    Direction.DOWN: Direction.RIGHT,
+}
 
 @dataclass(frozen=True)
 class Point:
@@ -26,8 +31,70 @@ def next_point(point: Point, direction: Direction, step: int = 1) -> Point:
     if direction == Direction.DOWN:
         return Point(point.x, point.y + step)
 
+def side_points(point: Point, direction: Direction) -> Iterator[Point]:
+    """
+    Yield the two points on either side of the current point,
+    when facing the given direction.
+    >>> tuple(side_points(Point(3, -1), Direction.RIGHT))
+    (Point(x=3, y=-2), Point(x=3, y=0))
+    >>> tuple(side_points(Point(3, -1), Direction.DOWN))
+    (Point(x=2, y=-1), Point(x=4, y=-1))
+    """
+    yield next_point(point, side_direction[direction], -1)
+    yield next_point(point, side_direction[direction], 1)
+
 Board = Dict[Point, str]
 Grid = Sequence[Sequence[str]]
+
+def get_word_start(board: Board, point: Point, direction: Direction) -> Point:
+    """
+    >>> board = board_with_word(new_board('flea'), Point(2, 0), Direction.DOWN, 'egg')
+    >>> get_word_start(board, Point(2, 0), Direction.RIGHT)
+    Point(x=0, y=0)
+    >>> get_word_start(board, Point(2, 2), Direction.DOWN)
+    Point(x=2, y=0)
+    >>> get_word_start(board, Point(2, 0), Direction.DOWN)
+    Point(x=2, y=0)
+    >>> get_word_start(board, Point(9, 9), Direction.DOWN)
+    Point(x=9, y=9)
+    """
+    last_point = point
+    while point in board:
+        last_point = point
+        point = next_point(point, direction, -1)
+    return last_point
+
+def get_letters(board: Board, start_point: Point, direction: Direction) -> Iterator[str]:
+    """
+    Yield the letters of the word that starts at this point in the given direction.
+    >>> board = board_with_word(new_board('flea'), Point(2, 0), Direction.DOWN, 'egg')
+    >>> ''.join(get_letters(board, Point(2, 0), Direction.DOWN))
+    'egg'
+    >>> ''.join(get_letters(board, Point(2, 0), Direction.RIGHT))
+    'ea'
+    """
+    while start_point in board:
+        yield board[start_point]
+        start_point = next_point(start_point, direction)
+
+def get_side_word(board: Board, point: Point, direction: Direction) -> Optional[str]:
+    """
+    At the given point, facing in the given direction, see if there's a crossways word.
+    >>> board = board_with_word(new_board('flea'), Point(2, 0), Direction.DOWN, 'egg')
+    >>> get_side_word(board, Point(2, 0), Direction.RIGHT)
+    'egg'
+    >>> board = board_with_word(new_board('flea'), Point(3, -1), Direction.DOWN, 'path')
+    >>> get_side_word(board, Point(3, 0), Direction.RIGHT)
+    'path'
+    >>> board = board_with_word(new_board('flea'), Point(1, -3), Direction.DOWN, 'pill')
+    >>> get_side_word(board, Point(1, 0), Direction.RIGHT)
+    'pill'
+    >>> get_side_word(board, Point(2, 0), Direction.RIGHT)
+    """
+    if any(side_point in board for side_point in side_points(point, direction)):
+        start_point = get_word_start(board, point, side_direction[direction])
+        return ''.join(get_letters(board, start_point, side_direction[direction]))
+    return None
 
 def gridded_board(board: Board) -> Grid:
     """
@@ -46,11 +113,11 @@ def print_board(board: Board) -> None:
     """
     >>> board = {Point(x=0, y=0): 'b', Point(x=0, y=1): 'a', Point(x=0, y=2): 'r', Point(x=1, y=1): 'x'}
     >>> print_board(board)
-    B 
+    B
     AX
-    R 
+    R
     """
-    print('\n'.join([''.join(x) for x in gridded_board(board)]))
+    print('\n'.join([''.join(x).rstrip() for x in gridded_board(board)]))
 
 def print_grids(grids: Sequence[Grid], width: int = 100, padding: int = 3) -> None:
     """
@@ -58,27 +125,29 @@ def print_grids(grids: Sequence[Grid], width: int = 100, padding: int = 3) -> No
     >>> board2 = {Point(x=0, y=0): 'b', Point(x=1, y=0): 'a', Point(x=2, y=0): 'r'}
     >>> grid, grid2 = gridded_board(board), gridded_board(board2)
     >>> print_grids([grid, grid, grid, grid2, grid])
-    B    B    B    BAR   B 
+    B    B    B    BAR   B
     AX   AX   AX         AX
-    R    R    R          R 
+    R    R    R          R
     <BLANKLINE>
     >>> print_grids([grid, grid, grid, grid2, grid], 21)
-    B    B    B 
+    B    B    B
     AX   AX   AX
-    R    R    R 
+    R    R    R
     <BLANKLINE>
-    BAR   B 
+    BAR   B
           AX
-          R 
+          R
     <BLANKLINE>
     """
     max_width = max(len(grid) for grid in grids)
     num = floor(width / (max_width + padding))
     diced_grids = (grids[i:i + num] for i in range(0, len(grids), num))
+    rows = []
     for row_of_grids in diced_grids:
         for i in range(max(len(grid) for grid in row_of_grids)):
-            print((' ' * padding).join(''.join(x for x in (grid[i] if len(grid) > i else ' ' * len(grid[0]))) for grid in row_of_grids))
-        print()
+            rows += [(' ' * padding).join(''.join(x for x in (grid[i] if len(grid) > i else ' ' * len(grid[0]))) for grid in row_of_grids).rstrip()]
+        rows += ['']
+    print('\n'.join(rows))
 
 def place_word(board: Board, where: Point, direction: Direction, word: str):
     """
@@ -105,6 +174,7 @@ def place_word(board: Board, where: Point, direction: Direction, word: str):
 def board_with_word(board: Board, where: Point, direction: Direction, word: str) -> Optional[Board]:
     """
     Does not mutate the board. Returns None if the word cannot be placed.
+    Does not check that any ancillary words formed are true words.
     >>> board = new_board('bar')
     >>> board2 = board_with_word(board, Point(1, 0), Direction.DOWN, 'ax')
     >>> assert len(board) == 3
@@ -115,7 +185,6 @@ def board_with_word(board: Board, where: Point, direction: Direction, word: str)
         place_word(board2, where, direction, word)
     except:
         return None
-    # TODO: check spelling of any new words formed.
     return board2
 
 def new_board(first_word: str, direction: Direction=Direction.RIGHT) -> Board:

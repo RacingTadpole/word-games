@@ -5,8 +5,22 @@ Run with:
 from bgram.compile_words import read_words
 from typing import Iterable, Tuple, Iterator, Dict
 
-from bgram.board import Board, Direction, next_point, new_board, board_with_word, gridded_board, print_grids
+from bgram.board import (
+    Board, Direction, Point, next_point, new_board, board_with_word, gridded_board, print_grids, get_side_word)
 
+def is_valid_word(word: str, words: Dict) -> bool:
+    """
+    >>> from bgram.compile_words import compile_words
+    >>> is_valid_word('yoyo', compile_words())
+    False
+    >>> is_valid_word('egg', compile_words())
+    True
+    """
+    if not word:
+        return '.' in words
+    if word[0] not in words:
+        return False
+    return is_valid_word(word[1:], words[word[0]])
 
 def excise_letter(letters: Iterable[str], letter: str) -> Iterable[str]:
     """
@@ -48,6 +62,26 @@ def find_words(words: Dict, letters: Iterable[str], history: str = '') -> Iterat
         if letter in words:
             yield from find_words(words[letter], excise_letter(letters, letter), history + letter)
 
+def side_words_are_valid(board: Board, start_point: Point, direction: Direction, words: Dict) -> bool:
+    """
+    Are all the words that cross this word valid? (Does not check the base word.)
+    >>> from bgram.compile_words import compile_words
+    >>> from bgram.board import Point, print_board, gridded_board
+    >>> words = compile_words()
+    >>> board = board_with_word(new_board('fleb'), Point(2, 0), Direction.DOWN, 'egg')
+    >>> side_words_are_valid(board, Point(0, 0), Direction.RIGHT, words)
+    True
+    >>> board = board_with_word(new_board('fleb'), Point(2, 0), Direction.DOWN, 'egh')
+    >>> side_words_are_valid(board, Point(0, 0), Direction.RIGHT, words)
+    False
+    """
+    while start_point in board:
+        side_word = get_side_word(board, start_point, direction)
+        if side_word and not is_valid_word(side_word, words):
+            return False
+        start_point = next_point(start_point, direction)
+    return True
+
 def extended_boards(board: Board, words: Dict, letters: Iterable[str]) -> Iterator[Tuple[Board, str]]:
     """
     What new boards can we make by adding some of the new letters to the existing board?
@@ -57,24 +91,18 @@ def extended_boards(board: Board, words: Dict, letters: Iterable[str]) -> Iterat
     >>> board = board_with_word(new_board('flee'), Point(2, 0), Direction.DOWN, 'egg')
     >>> print_board(board)
     FLEE
-      G 
-      G 
+      G
+      G
     >>> for board, new_letters in extended_boards(board, compile_words(), 'terp'):
     ...    print(new_letters, ':')
     ...    print_board(board)
     tre :
        T
        R
-    FLEE
-      GE
-      G 
-    tre :
-       T
-       R
        E
     FLEE
-      G 
-      G 
+      G
+      G
     """
     if len(board) == 0:
         for word in find_words(words, letters):
@@ -88,8 +116,9 @@ def extended_boards(board: Board, words: Dict, letters: Iterable[str]) -> Iterat
                         # There must also be a blank space at the end of the word.
                         if (next_point(position, direction, -1) not in board and
                                 next_point(position, direction, len(word) - index) not in board):
-                            board2 = board_with_word(board, next_point(position, direction, -index), direction, word)
-                            if board2:
+                            start_point = next_point(position, direction, -index)
+                            board2 = board_with_word(board, start_point, direction, word)
+                            if board2 and side_words_are_valid(board2, start_point, direction, words):
                                 yield board2, excise_letter(word, existing_letter)
 
 def solve_boards(board: Board, words: Dict, other_letters: Iterable[str]) -> Iterator[Board]:
@@ -98,11 +127,11 @@ def solve_boards(board: Board, words: Dict, other_letters: Iterable[str]) -> Ite
     >>> boards = solve_boards({}, compile_words(), 'atlgfrgee')
     >>> grids = sorted(set(gridded_board(board) for board in boards))
     >>> print_grids(grids)
-       F     F     F      T       T      F     TREE    TREE   T F   TF    TREE   TREE
-       L   T L     L      R       R     TL       G    FLAG    R L   RL       G   FLAG
-    TREE   R A   TREE     EGG   FLEA    RA    FLAG       G    E A   EA    FLAG      G
-      GA   EGG     AG   FLEA      EGG   EGG                   EGG   EGG              
-      G    E        G                   E                                            
+      F    TREE   T F   TREE
+    T L      G    R L      G
+    R A   FLAG    E A   FLAG
+    EGG           EGG
+    E
     <BLANKLINE>
     """
     if len(other_letters) == 0:
