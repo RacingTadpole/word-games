@@ -49,3 +49,13 @@ def read_words(path: str, words: Optional[Dict] = None) -> Dict:
                 updated_words = add_to_words_subtree(updated_words, word)
     return updated_words
 
+def print_words_of_length(path: str, l: int) -> None:
+    """
+    Use this if you want to see all the words of a certain length,
+    in case you want to adjust the dictionary.
+    """
+    with open(path, 'r') as f:
+        for word_with_return in f:
+            word = word_with_return.strip().lower()
+            if len(word) == l:
+                print(word)
