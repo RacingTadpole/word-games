@@ -1,4 +1,4 @@
-from typing import Dict, Iterator, Optional, Sequence
+from typing import Dict, Iterable, Iterator, Optional, Sequence, Tuple
 from dataclasses import dataclass
 from enum import Enum
 from math import floor
@@ -48,7 +48,7 @@ Grid = Sequence[Sequence[str]]
 
 def get_word_start(board: Board, point: Point, direction: Direction) -> Point:
     """
-    >>> board = board_with_word(new_board('flea'), Point(2, 0), Direction.DOWN, 'egg')
+    >>> board, _ = board_with_word(new_board('flea'), Point(2, 0), Direction.DOWN, 'egg')
     >>> get_word_start(board, Point(2, 0), Direction.RIGHT)
     Point(x=0, y=0)
     >>> get_word_start(board, Point(2, 2), Direction.DOWN)
@@ -67,7 +67,7 @@ def get_word_start(board: Board, point: Point, direction: Direction) -> Point:
 def get_letters(board: Board, start_point: Point, direction: Direction) -> Iterator[str]:
     """
     Yield the letters of the word that starts at this point in the given direction.
-    >>> board = board_with_word(new_board('flea'), Point(2, 0), Direction.DOWN, 'egg')
+    >>> board, _ = board_with_word(new_board('flea'), Point(2, 0), Direction.DOWN, 'egg')
     >>> ''.join(get_letters(board, Point(2, 0), Direction.DOWN))
     'egg'
     >>> ''.join(get_letters(board, Point(2, 0), Direction.RIGHT))
@@ -80,13 +80,13 @@ def get_letters(board: Board, start_point: Point, direction: Direction) -> Itera
 def get_side_word(board: Board, point: Point, direction: Direction) -> Optional[str]:
     """
     At the given point, facing in the given direction, see if there's a crossways word.
-    >>> board = board_with_word(new_board('flea'), Point(2, 0), Direction.DOWN, 'egg')
+    >>> board, _ = board_with_word(new_board('flea'), Point(2, 0), Direction.DOWN, 'egg')
     >>> get_side_word(board, Point(2, 0), Direction.RIGHT)
     'egg'
-    >>> board = board_with_word(new_board('flea'), Point(3, -1), Direction.DOWN, 'path')
+    >>> board, _ = board_with_word(new_board('flea'), Point(3, -1), Direction.DOWN, 'path')
     >>> get_side_word(board, Point(3, 0), Direction.RIGHT)
     'path'
-    >>> board = board_with_word(new_board('flea'), Point(1, -3), Direction.DOWN, 'pill')
+    >>> board, _ = board_with_word(new_board('flea'), Point(1, -3), Direction.DOWN, 'pill')
     >>> get_side_word(board, Point(1, 0), Direction.RIGHT)
     'pill'
     >>> get_side_word(board, Point(2, 0), Direction.RIGHT)
@@ -139,6 +139,8 @@ def print_grids(grids: Sequence[Grid], width: int = 120, padding: int = 3) -> No
           R
     <BLANKLINE>
     """
+    if not grids:
+        return
     max_width = max(len(grid) for grid in grids)
     num = floor(width / (max_width + padding))
     diced_grids = (grids[i:i + num] for i in range(0, len(grids), num))
@@ -149,14 +151,17 @@ def print_grids(grids: Sequence[Grid], width: int = 120, padding: int = 3) -> No
         rows += ['']
     print('\n'.join(rows))
 
-def place_word(board: Board, where: Point, direction: Direction, word: str):
+def place_word(board: Board, where: Point, direction: Direction, word: str, placed_so_far: str) -> Iterable[str]:
     """
-    Mutates board. Only for internal use.
+    Mutates board. Returns the letters that are placed (ie. skipping any already on the board).
+    Only for internal use.
     >>> board = {}
-    >>> place_word(board, Point(0, 0), Direction.DOWN, 'bar')
+    >>> place_word(board, Point(0, 0), Direction.DOWN, 'bar', '')
+    'bar'
     >>> board
     {Point(x=0, y=0): 'b', Point(x=0, y=1): 'a', Point(x=0, y=2): 'r'}
-    >>> place_word(board, Point(0, 1), Direction.RIGHT, 'ax')
+    >>> place_word(board, Point(0, 1), Direction.RIGHT, 'ax', '')
+    'x'
     >>> board
     {Point(x=0, y=0): 'b', Point(x=0, y=1): 'a', Point(x=0, y=2): 'r', Point(x=1, y=1): 'x'}
     >>> import pytest
@@ -164,28 +169,36 @@ def place_word(board: Board, where: Point, direction: Direction, word: str):
     ...     place_word(board, Point(0, 0), Direction.RIGHT, 'zoo')
     """
     if not word:
-        return board
+        return placed_so_far
     letter = word[0]
-    if board.get(where, letter) != letter:
-        raise Exception(f'Inconsistent letters {letter} and {board[where]} at {where}.')
-    board.update({where: letter})
-    place_word(board, next_point(where, direction), direction, word[1:])
+    if where in board:
+        if board[where] != letter:
+            raise Exception(f'Inconsistent letters {letter} and {board[where]} at {where}.')
+    else:
+        board.update({where: letter})
+        placed_so_far = placed_so_far + letter
+    return place_word(board, next_point(where, direction), direction, word[1:], placed_so_far)
 
-def board_with_word(board: Board, where: Point, direction: Direction, word: str) -> Optional[Board]:
+def board_with_word(board: Board, where: Point, direction: Direction, word: str) -> Tuple[Optional[Board], str]:
     """
     Does not mutate the board. Returns None if the word cannot be placed.
     Does not check that any ancillary words formed are true words.
     >>> board = new_board('bar')
-    >>> board2 = board_with_word(board, Point(1, 0), Direction.DOWN, 'ax')
+    >>> board2, used = board_with_word(board, Point(1, 0), Direction.DOWN, 'ax')
     >>> assert len(board) == 3
     >>> assert len(board2) == 4
+    >>> used
+    'x'
+    >>> board_with_word(board, Point(1, -1), Direction.DOWN, 'foo')[0] # already an "a" in the way.
+    >>> board_with_word(board, Point(0, 0), Direction.RIGHT, 'bar')[0] # No new letters placed.
     """
     board2 = dict(board)
+    letters_used = ''
     try:
-        place_word(board2, where, direction, word)
+        letters_used = place_word(board2, where, direction, word, '')
     except:
-        return None
-    return board2
+        return None, ''
+    return (board2 if letters_used else None), letters_used
 
 def new_board(first_word: str, direction: Direction=Direction.RIGHT) -> Board:
     """
@@ -193,5 +206,5 @@ def new_board(first_word: str, direction: Direction=Direction.RIGHT) -> Board:
     {Point(x=0, y=0): 'u', Point(x=1, y=0): 'p'}
     """
     board = {}
-    place_word(board, Point(0, 0), direction, first_word)
+    place_word(board, Point(0, 0), direction, first_word, '')
     return board

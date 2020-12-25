@@ -2,12 +2,12 @@
 Run with:
     python -m bgram.solve
 """
-from dataclasses import dataclass
+import time
 from bgram.compile_words import read_words
 from typing import Iterable, List, Tuple, Iterator, Dict
 
 from bgram.board import (
-    Board, Direction, Point, next_point, new_board, board_with_word, gridded_board, print_grids, get_side_word)
+    Board, Direction, Point, next_point, new_board, board_with_word, gridded_board, print_board, print_grids, get_side_word)
 
 def is_valid_word(word: str, words: Dict) -> bool:
     """
@@ -69,10 +69,10 @@ def side_words_are_valid(board: Board, start_point: Point, direction: Direction,
     >>> from bgram.compile_words import compile_words
     >>> from bgram.board import Point, print_board, gridded_board
     >>> words = compile_words()
-    >>> board = board_with_word(new_board('fleb'), Point(2, 0), Direction.DOWN, 'egg')
+    >>> board, _ = board_with_word(new_board('fleb'), Point(2, 0), Direction.DOWN, 'egg')
     >>> side_words_are_valid(board, Point(0, 0), Direction.RIGHT, words)
     True
-    >>> board = board_with_word(new_board('fleb'), Point(2, 0), Direction.DOWN, 'egh')
+    >>> board, _ = board_with_word(new_board('fleb'), Point(2, 0), Direction.DOWN, 'egh')
     >>> side_words_are_valid(board, Point(0, 0), Direction.RIGHT, words)
     False
     """
@@ -94,7 +94,7 @@ def extended_boards(board: Board, words: Dict, banned_words: Iterable[str], lett
     (without changing the existing board or extending existing words)
     >>> from bgram.compile_words import compile_words
     >>> from bgram.board import Point, print_board, gridded_board
-    >>> board = board_with_word(new_board('flee'), Point(2, 0), Direction.DOWN, 'egg')
+    >>> board, _ = board_with_word(new_board('flee'), Point(2, 0), Direction.DOWN, 'egg')
     >>> print_board(board)
     FLEE
       G
@@ -124,10 +124,9 @@ def extended_boards(board: Board, words: Dict, banned_words: Iterable[str], lett
                         if (next_point(position, direction, -1) not in board and
                                 next_point(position, direction, len(word) - index) not in board):
                             start_point = next_point(position, direction, -index)
-                            board2 = board_with_word(board, start_point, direction, word)
+                            board2, used_letters = board_with_word(board, start_point, direction, word)
                             if board2 and side_words_are_valid(board2, start_point, direction, words):
-                                # TODO: also need to excise any other pre-existing letters
-                                yield board2, excise_letter(word, existing_letter)
+                                yield board2, used_letters
 
 def solve_boards(board: Board, words: Dict, banned_words: Iterable[str], other_letters: Iterable[str]) -> Iterator[Board]:
     """
@@ -145,8 +144,9 @@ def solve_boards(board: Board, words: Dict, banned_words: Iterable[str], other_l
     if len(other_letters) == 0:
         yield board
     else:
-        for board2, word in extended_boards(board, words, banned_words, other_letters):
-            yield from solve_boards(board2, words, banned_words, excise_letters(other_letters, word))
+        for board2, used_letters in extended_boards(board, words, banned_words, other_letters):
+            if board2:
+                yield from solve_boards(board2, words, banned_words, excise_letters(other_letters, used_letters))
 
 def solve_unique_boards(words: Dict, letters: Iterable[str]) -> Iterator[Board]:
     """
@@ -154,8 +154,8 @@ def solve_unique_boards(words: Dict, letters: Iterable[str]) -> Iterator[Board]:
     This prevents duplicate boards.
     >>> from bgram.compile_words import compile_words
     >>> boards = solve_unique_boards(compile_words(), 'atlgfrgee')
-    >>> len(list(boards)) == 2
-    True
+    >>> len(list(boards))
+    2
 
     The two boards are below, but it is random whether EGG is vertical or horizontal.
      TREE   TREE
@@ -170,12 +170,16 @@ def solve_unique_boards(words: Dict, letters: Iterable[str]) -> Iterator[Board]:
             yield from solve_boards(board, words, banned_words, excise_letters(letters, word))
 
 if __name__ == '__main__':
-    # Eg. Enter your starting letters: rfsemrantetsaojtilfto
+    # Eg. Enter your starting letters: rfsemrante - finds 19985 boards in 42.438 seconds.
     path = './data/words.txt'
     words = read_words(path)
 
     letters = input('\nEnter your starting letters: ').lower().replace(' ','')
-    boards = solve_unique_boards(words, letters)
+    start = time.perf_counter()
+    boards = list(solve_unique_boards(words, letters)) # Put in list to actually get them all
     grids = sorted(set(gridded_board(board) for board in boards))
-    print(f'Found {len(grids)} boards')
+    duration = time.perf_counter() - start
+    print(f'Found {len(grids)} boards in {duration:.3f} seconds')
     print_grids(grids)
+    if len(grids) >= 100:
+        print(f'Found {len(grids)} boards in {duration:.3f} seconds')
