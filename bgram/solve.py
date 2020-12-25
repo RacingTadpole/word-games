@@ -2,8 +2,9 @@
 Run with:
     python -m bgram.solve
 """
+from dataclasses import dataclass
 from bgram.compile_words import read_words
-from typing import Iterable, Tuple, Iterator, Dict
+from typing import Iterable, List, Tuple, Iterator, Dict
 
 from bgram.board import (
     Board, Direction, Point, next_point, new_board, board_with_word, gridded_board, print_grids, get_side_word)
@@ -82,7 +83,12 @@ def side_words_are_valid(board: Board, start_point: Point, direction: Direction,
         start_point = next_point(start_point, direction)
     return True
 
-def extended_boards(board: Board, words: Dict, letters: Iterable[str]) -> Iterator[Tuple[Board, str]]:
+# @dataclass(frozen=True)
+# class BoardExtension:
+#     board: Board
+#     letters_used: Iterable[str]
+
+def extended_boards(board: Board, words: Dict, banned_words: Iterable[str], letters: Iterable[str]) -> Iterator[Tuple[Board, str]]:
     """
     What new boards can we make by adding some of the new letters to the existing board?
     (without changing the existing board or extending existing words)
@@ -93,7 +99,7 @@ def extended_boards(board: Board, words: Dict, letters: Iterable[str]) -> Iterat
     FLEE
       G
       G
-    >>> for board, new_letters in extended_boards(board, compile_words(), 'terp'):
+    >>> for board, new_letters in extended_boards(board, compile_words(), [], 'terp'):
     ...    print(new_letters, ':')
     ...    print_board(board)
     tre :
@@ -106,10 +112,11 @@ def extended_boards(board: Board, words: Dict, letters: Iterable[str]) -> Iterat
     """
     if len(board) == 0:
         for word in find_words(words, letters):
-            yield new_board(word), word
+            if word not in banned_words:
+                yield new_board(word), word
     for position, existing_letter in board.items():
         for word in find_words(words, [existing_letter] + list(letters)):
-            if existing_letter in word:
+            if existing_letter in word and word not in banned_words:
                 for index in [i for i, l in enumerate(word) if l == existing_letter]:
                     for direction in [Direction.RIGHT, Direction.DOWN]:
                         # Do not extend from a position with a letter already on the other side.
@@ -119,12 +126,13 @@ def extended_boards(board: Board, words: Dict, letters: Iterable[str]) -> Iterat
                             start_point = next_point(position, direction, -index)
                             board2 = board_with_word(board, start_point, direction, word)
                             if board2 and side_words_are_valid(board2, start_point, direction, words):
+                                # TODO: also need to excise any other pre-existing letters
                                 yield board2, excise_letter(word, existing_letter)
 
-def solve_boards(board: Board, words: Dict, other_letters: Iterable[str]) -> Iterator[Board]:
+def solve_boards(board: Board, words: Dict, banned_words: Iterable[str], other_letters: Iterable[str]) -> Iterator[Board]:
     """
     >>> from bgram.compile_words import compile_words
-    >>> boards = solve_boards({}, compile_words(), 'atlgfrgee')
+    >>> boards = solve_boards({}, compile_words(), [], 'atlgfrgee')
     >>> grids = sorted(set(gridded_board(board) for board in boards))
     >>> print_grids(grids)
       F    TREE   T F   TREE
@@ -137,8 +145,29 @@ def solve_boards(board: Board, words: Dict, other_letters: Iterable[str]) -> Ite
     if len(other_letters) == 0:
         yield board
     else:
-        for board2, word in extended_boards(board, words, other_letters):
-            yield from solve_boards(board2, words, excise_letters(other_letters, word))
+        for board2, word in extended_boards(board, words, banned_words, other_letters):
+            yield from solve_boards(board2, words, banned_words, excise_letters(other_letters, word))
+
+def solve_unique_boards(words: Dict, letters: Iterable[str]) -> Iterator[Board]:
+    """
+    Solve for all boards, where no board can ever place any earlier board's starting word.
+    This prevents duplicate boards.
+    >>> from bgram.compile_words import compile_words
+    >>> boards = solve_unique_boards(compile_words(), 'atlgfrgee')
+    >>> len(list(boards)) == 2
+    True
+
+    The two boards are below, but it is random whether EGG is vertical or horizontal.
+     TREE   TREE
+       G       G
+    FLAG    FLAG
+    """
+    banned_words: List[str] = []
+    for word in find_words(words, letters):
+        if word not in banned_words:
+            board = new_board(word)
+            banned_words.append(word)
+            yield from solve_boards(board, words, banned_words, excise_letters(letters, word))
 
 if __name__ == '__main__':
     # Eg. Enter your starting letters: rfsemrantetsaojtilfto
@@ -146,7 +175,7 @@ if __name__ == '__main__':
     words = read_words(path)
 
     letters = input('\nEnter your starting letters: ').lower().replace(' ','')
-    boards = solve_boards({}, words, letters)
+    boards = solve_unique_boards(words, letters)
     grids = sorted(set(gridded_board(board) for board in boards))
     print(f'Found {len(grids)} boards')
     print_grids(grids)

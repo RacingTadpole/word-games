@@ -119,7 +119,7 @@ def print_board(board: Board) -> None:
     """
     print('\n'.join([''.join(x).rstrip() for x in gridded_board(board)]))
 
-def print_grids(grids: Sequence[Grid], width: int = 100, padding: int = 3) -> None:
+def print_grids(grids: Sequence[Grid], width: int = 120, padding: int = 3) -> None:
     """
     >>> board = {Point(x=0, y=0): 'b', Point(x=0, y=1): 'a', Point(x=0, y=2): 'r', Point(x=1, y=1): 'x'}
     >>> board2 = {Point(x=0, y=0): 'b', Point(x=1, y=0): 'a', Point(x=2, y=0): 'r'}
