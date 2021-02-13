@@ -1,6 +1,6 @@
 """
 Run with:
-    python -m boggle.boggle
+    python -m boggle.solve
 """
 from boggle.replacements import get_replacement_messages, restore_special
 from boggle.compile_words import read_words
@@ -72,7 +72,7 @@ def pretty_print(words: Sequence[str], width: int = 120) -> None:
     print()
 
 if __name__ == '__main__':
-    # board = ["rfsem", "rfsem", "tsaoj", "tilft", "octhr"]
+    # board = ["rfsem", "rante", "tsaoj", "tilft", "octhr"]
     # Eg. Enter: rfsem,rante,tsaoj,tilft,octhr
     path = './data/words.txt'
     words = read_words(path)

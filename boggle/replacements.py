@@ -10,5 +10,5 @@ def restore_special(replaced_word: str) -> str:
 def get_replacement_messages() -> List[str]:
     return [
         "Note: If there's a 'Qu' in your board, just type Q.",
-        # (To get just a Q, you need to type √)
+        # (To get just a Q, you need to type √) TODO: doesn't work.
     ]
