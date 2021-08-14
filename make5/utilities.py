@@ -1,24 +1,20 @@
-import itertools
 from make5.types import FrequencyDict, WordDict
 from typing import Iterable, Iterator
 
-
-def get_words_with_letters_missing(word: str, symbol: str = '?') -> Iterator[str]:
+def _get_test_words() -> WordDict:
     """
-    >>> list(get_words_with_letters_missing('dog'))
-    ['dog', '?og', 'd?g', 'do?', '??g', '?o?', 'd??']
+    >>> _get_test_words()['?og']
+    ['dog', 'log']
     """
-    for r in range(0, len(word)): # ie. [0, 1, 2, 3, ..., len(word) - 1]
-        for replacement_indexes in itertools.combinations(range(len(word)), r):
-            result = ''.join(symbol if i in replacement_indexes else word[i] for i in range(len(word)))
-            yield result
+    import os
+    from .compile_words import read_words
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    return read_words(os.path.join(dir_path, 'test_data.txt'))
 
 
 def get_subwords(words: WordDict, word: str, min_length: int = 3) -> Iterator[str]:
     """
-    >>> import os
-    >>> dir_path = os.path.dirname(os.path.realpath(__file__))
-    >>> words = read_words(os.path.join(dir_path, 'test_data.txt'))
+    >>> words = _get_test_words()
     >>> list(get_subwords(words, 'skits'))
     ['ski', 'kit', 'its', 'skit', 'kits', 'skits']
     >>> list(get_subwords(words, 'alogs'))
@@ -46,11 +42,13 @@ def get_chance(key: str, word: str, frequency: FrequencyDict, symbol: str = '?')
     >>> frequency = read_frequencies(os.path.join(dir_path, 'frequencies.txt'))
     >>> get_chance('???f?', 'loafs', frequency)
     9.6e-06
+    >>> get_chance('???f?', '?oafs', frequency)
+    0.00024
     """
     x = 1
     for i in range(len(word)):
         if key[i] == symbol:
-            x = x * frequency[word[i]]
+            x = x * frequency.get(word[i], 1)
     return x
 
 

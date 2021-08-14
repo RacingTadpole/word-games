@@ -1,7 +1,17 @@
-from typing import Optional
-
+import itertools
+from typing import Optional, Iterator
 from make5.types import WordDict
-from make5.utilities import get_words_with_letters_missing
+
+
+def get_words_with_letters_missing(word: str, symbol: str = '?') -> Iterator[str]:
+    """
+    >>> list(get_words_with_letters_missing('dog'))
+    ['dog', '?og', 'd?g', 'do?', '??g', '?o?', 'd??']
+    """
+    for r in range(0, len(word)): # ie. [0, 1, 2, 3, ..., len(word) - 1]
+        for replacement_indexes in itertools.combinations(range(len(word)), r):
+            result = ''.join(symbol if i in replacement_indexes else word[i] for i in range(len(word)))
+            yield result
 
 
 def add_to_words_dict(words: WordDict, word: str) -> WordDict:

@@ -18,7 +18,8 @@ if __name__ == '__main__':
     frequency = read_frequencies('./make5/frequencies.txt')
 
     while True:
-        key = input('Enter an expression, eg. "?rea?": ')
+        key = input('Enter an expression, eg. ".rea.": ')
+        key = key.replace('.', '?')
         if not key:
             print('Goodbye!')
             exit()
@@ -26,8 +27,8 @@ if __name__ == '__main__':
         results = words.get(key, [])
         # TODO: allow non-5-letter words too
         scores = [Score(word, key, words, frequency) for word in results]
-        sorted_scores = sorted(scores, key=lambda s: s.score)
+        sorted_scores = sorted(scores, key=lambda s: s.weighted_score)
         for s in sorted_scores:
-            print(f'{s.word:5} {get_score(s.subwords):4} {(s.chance * 100):5.1f}%: {s.subwords}')
+            print(f'{s.word:5} {s.weighted_score:5.1f} {s.score:4} {(s.chance * 100):6.2f}%: {s.subwords}')
         print(f'Total weighted score: {sum(s.weighted_score for s in scores):5.1f}')
         print()
