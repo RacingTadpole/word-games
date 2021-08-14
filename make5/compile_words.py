@@ -8,10 +8,10 @@ def add_to_words_dict(words: WordDict, word: str) -> WordDict:
     """
     >>> words = add_to_words_dict({}, 'dog')
     >>> words
-    {'?og': ['dog'], 'd?g': ['dog'], 'do?': ['dog'], '??g': ['dog'], '?o?': ['dog'], 'd??': ['dog']}
+    {'dog': ['dog'], '?og': ['dog'], 'd?g': ['dog'], 'do?': ['dog'], '??g': ['dog'], '?o?': ['dog'], 'd??': ['dog']}
     >>> words = add_to_words_dict(words, 'log')
     >>> words
-    {'?og': ['dog', 'log'], 'd?g': ['dog'], 'do?': ['dog'], '??g': ['dog', 'log'], '?o?': ['dog', 'log'], 'd??': ['dog'], 'l?g': ['log'], 'lo?': ['log'], 'l??': ['log']}
+    {'dog': ['dog'], '?og': ['dog', 'log'], 'd?g': ['dog'], 'do?': ['dog'], '??g': ['dog', 'log'], '?o?': ['dog', 'log'], 'd??': ['dog'], 'log': ['log'], 'l?g': ['log'], 'lo?': ['log'], 'l??': ['log']}
     """
     for key in get_words_with_letters_missing(word):
         if key in words:

@@ -73,15 +73,18 @@ party → pasty → paste → passe → posse → poise → prise → prose → 
 This is still a work in progress, but you can do the following:
 
 ```
-python
->>> from make5.compile_words import read_words
->>> w = read_words('./data/words.txt')
->>> w.get('?rea?')
-['areas', 'bread', 'break', 'bream', 'creak', 'cream', 'dread',
- 'dream', 'drear', 'freak', 'great', 'tread', 'treat', 'wreak']
+python -m make5.play
+
+Enter an expression, eg. "?rea?": ???f?
+...
+theft   12: ('the', 'heft', 'theft')
+waifs   12: ('ifs', 'waif', 'waifs')
+cleft   13: ('clef', 'left', 'cleft')
+loafs   16: ('oaf', 'loaf', 'oafs', 'loafs')
 ```
 
-to get all the words matching the pattern "?rea?", for example.
+to get all the words matching a pattern "???f?", ranked by those containing the most subwords.
+The score shown for each is calculated using a score of 1 per letter.
 
 ## Quick start
 
