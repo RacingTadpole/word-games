@@ -36,16 +36,34 @@ if __name__ == '__main__':
     frequency = read_frequencies('./make5/frequencies.txt')
 
     while True:
-        key = input('Enter an expression, eg. ".rea.": ')
+        key = input('Enter an expression, eg. ".re..": ')
         key = key.replace('.', '?')
         if not key:
             print('Goodbye!')
             exit()
-        
-        results = get_complete_choices(key, words)
-        choices = [Choice(word, key, 0, words, frequency) for word in results]
-        sorted_choices = sorted(choices, key=lambda s: s.weighted_score)
-        for s in sorted_choices:
-            print(f'{s.padded_word:5} {s.weighted_score:5.2f} {s.score:4} {(s.chance * 100):6.2f}%: {s.subwords}')
-        print(f'Total weighted score: {sum(s.weighted_score for s in choices):5.1f}')
+        letter = input('Enter the new letter (if any): ')
         print()
+
+        if not letter:
+            # not DRY
+            this_key = key
+            results = get_complete_choices(this_key, words)
+            choices = [Choice(word, this_key, 0, words, frequency) for word in results]
+            sorted_choices = sorted(choices, key=lambda s: s.weighted_score)
+            for s in sorted_choices:
+                print(f'{s.padded_word:5} {s.weighted_score:5.2f} {s.score:4} {(s.chance * 100):6.2f}%: {s.subwords}')
+            print(f'Total weighted score: {sum(s.weighted_score for s in choices):5.1f}')
+            break
+
+        for position in range(len(key)):
+            if key[position] == '?':
+                this_key = ''.join(letter if i == position else key[i] for i in range(len(key)))
+
+                print(this_key)
+                results = get_complete_choices(this_key, words)
+                choices = [Choice(word, this_key, 0, words, frequency) for word in results]
+                sorted_choices = sorted(choices, key=lambda s: s.weighted_score)
+                for s in sorted_choices:
+                    print(f'{s.padded_word:5} {s.weighted_score:5.2f} {s.score:4} {(s.chance * 100):6.2f}%: {s.subwords}')
+                print(f'Total weighted score: {sum(s.weighted_score for s in choices):5.1f}')
+                print()
