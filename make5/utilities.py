@@ -1,5 +1,5 @@
 from make5.types import FrequencyDict, WordDict
-from typing import Iterable, Iterator
+from typing import Iterator
 
 def _get_test_words() -> WordDict:
     """
@@ -12,27 +12,27 @@ def _get_test_words() -> WordDict:
     return read_words(os.path.join(dir_path, 'test_data.txt'))
 
 
-def get_subwords(words: WordDict, word: str, min_length: int = 3) -> Iterator[str]:
+def get_subsets(key: str, min_length: int = 3) -> Iterator[str]:
+    """
+    >>> list(get_subsets('?kits'))
+    ['?ki', 'kit', 'its', '?kit', 'kits', '?kits']
+    """
+    for length in range(min_length, len(key) + 2):
+        for start_index in range(0, len(key) - length + 1):
+            yield key[start_index:start_index + length]
+
+
+def get_subwords(words: WordDict, key: str, min_length: int = 3) -> Iterator[str]:
     """
     >>> words = _get_test_words()
     >>> list(get_subwords(words, 'skits'))
     ['ski', 'kit', 'its', 'skit', 'kits', 'skits']
-    >>> list(get_subwords(words, 'alogs'))
-    ['log', 'logs']
+    >>> list(get_subwords(words, '??ogs'))
+    ['ado', 'dog', 'log', 'blog', 'clog', 'slog', 'dogs', 'logs', 'blogs', 'clogs', 'slogs']
     """
-    for length in range(min_length, len(word) + 2):
-        for start_index in range(0, len(word) - length + 1):
-            candidate = word[start_index:start_index + length]
-            if candidate in words:
-                yield candidate
-
-
-def get_score(words: Iterable[str]) -> int:
-    """
-    >>> get_score(['log', 'logs'])
-    7
-    """
-    return sum(len(word) for word in words)
+    yield from (
+        w for subkey in get_subsets(key, min_length)
+            for w in words.get(subkey, []))
 
 
 def get_chance(key: str, word: str, frequency: FrequencyDict, symbol: str = '?') -> float:
