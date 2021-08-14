@@ -68,6 +68,21 @@ Final words: above, aloud, anode
 party → pasty → paste → passe → posse → poise → prise → prose → prone → crone → clone → alone → aline → amine → amide → abide → abode → above
 ```
 
+## Make five
+
+This is still a work in progress, but you can do the following:
+
+```
+python
+>>> from make5.compile_words import read_words
+>>> w = read_words('./data/words.txt')
+>>> w.get('?rea?')
+['areas', 'bread', 'break', 'bream', 'creak', 'cream', 'dread',
+ 'dream', 'drear', 'freak', 'great', 'tread', 'treat', 'wreak']
+```
+
+to get all the words matching the pattern "?rea?", for example.
+
 ## Quick start
 
 ### Install Python and pipenv
