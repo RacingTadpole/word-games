@@ -1,5 +1,5 @@
 from make5.types import FrequencyDict, WordDict
-from typing import Iterator
+from typing import Iterator, Tuple
 
 def _get_test_words() -> WordDict:
     """
@@ -12,26 +12,26 @@ def _get_test_words() -> WordDict:
     return read_words(os.path.join(dir_path, 'test_data.txt'))
 
 
-def get_subsets(key: str, min_length: int = 3) -> Iterator[str]:
+def get_subsets(key: str, min_length: int = 3) -> Iterator[Tuple[int, str]]:
     """
     >>> list(get_subsets('?kits'))
-    ['?ki', 'kit', 'its', '?kit', 'kits', '?kits']
+    [(0, '?ki'), (1, 'kit'), (2, 'its'), (0, '?kit'), (1, 'kits'), (0, '?kits')]
     """
     for length in range(min_length, len(key) + 2):
         for start_index in range(0, len(key) - length + 1):
-            yield key[start_index:start_index + length]
+            yield start_index, key[start_index:start_index + length]
 
 
-def get_subwords(words: WordDict, key: str, min_length: int = 3) -> Iterator[str]:
+def get_subwords(words: WordDict, key: str, min_length: int = 3) -> Iterator[Tuple[int, str]]:
     """
     >>> words = _get_test_words()
     >>> list(get_subwords(words, 'skits'))
-    ['ski', 'kit', 'its', 'skit', 'kits', 'skits']
-    >>> list(get_subwords(words, '??ogs'))
+    [(0, 'ski'), (1, 'kit'), (2, 'its'), (0, 'skit'), (1, 'kits'), (0, 'skits')]
+    >>> [z[1] for z in get_subwords(words, '??ogs')]
     ['ado', 'dog', 'log', 'blog', 'clog', 'slog', 'dogs', 'logs', 'blogs', 'clogs', 'slogs']
     """
     yield from (
-        w for subkey in get_subsets(key, min_length)
+        (start, w) for start, subkey in get_subsets(key, min_length)
             for w in words.get(subkey, []))
 
 
