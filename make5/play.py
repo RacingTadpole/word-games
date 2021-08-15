@@ -1,3 +1,4 @@
+from typing import Sequence
 from make5.utilities import read_frequencies, get_chance, get_subwords, get_full_length_combos
 from make5.compile_words import read_words
 from make5.types import FrequencyDict, WordDict
@@ -31,7 +32,7 @@ class Choice:
         self.weighted_score = self.chance * self.score
 
 
-def print_combos(key: str, words: WordDict, frequency: FrequencyDict):
+def get_sorted_choices(key: str, words: WordDict, frequency: FrequencyDict) -> Sequence[Choice]:
     length = len(key)
     subwords = list(get_subwords(words, key))
     full_length_results = list(get_full_length_combos(subwords, length))
@@ -41,9 +42,13 @@ def print_combos(key: str, words: WordDict, frequency: FrequencyDict):
     results = partial_results + full_length_results
     choices = [Choice(word, key, 0, words, frequency) for word in results]
     sorted_choices = sorted(choices, key=lambda s: s.weighted_score)
+    return sorted_choices
+
+
+def print_choices(sorted_choices: Sequence[Choice]) -> None:
     for s in sorted_choices:
         print(f'{s.padded_word:5} {s.weighted_score:5.2f} {s.score:4} {(s.chance * 100):6.2f}%: {s.subwords}')
-    print(f'Total weighted score: {sum(s.weighted_score for s in choices):5.1f}')
+    print(f'Total weighted score: {sum(s.weighted_score for s in sorted_choices):5.1f}')
 
 
 if __name__ == '__main__':
@@ -65,6 +70,6 @@ if __name__ == '__main__':
                 if key[position] == '?':
                     this_key = ''.join(letter if i == position else key[i] for i in range(len(key)))
                     print(this_key)
-                    print_combos(this_key, words, frequency)
+                    print_choices(get_sorted_choices(this_key, words, frequency))
         else:
-            print_combos(key, words, frequency)
+            print_choices(get_sorted_choices(key, words, frequency))
