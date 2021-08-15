@@ -73,7 +73,7 @@ party → pasty → paste → passe → posse → poise → prise → prose → 
 This is still a work in progress, but you can do the following:
 
 ```
-python -m make5.play
+python -m make5.play_line
 
 Enter an expression, eg. "?rea?": ???f?
 ...
