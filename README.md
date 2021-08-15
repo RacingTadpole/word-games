@@ -96,7 +96,7 @@ Best locations (analysing depth 1):
 ```
 
 This shows the top few locations to place the letter, based on the expected scores of the rows and
-columns (weighted by the likelihood of getting the required letters).
+columns (adjusted for the likelihood of getting the required letters).
 It does not yet consider the consequences of placing the letter on other rows and columns.
 
 You can also use:
@@ -105,7 +105,7 @@ You can also use:
 python -m make5.play_line
 ```
 
-to get all the words matching a pattern, ranked by their scores weighted by the likelihood of getting the remaining letters.
+to get all the words matching a pattern, ranked by their scores adjusted for the likelihood of getting the remaining letters.
 The score shown for each is calculated using a score of 1 per letter per subword.
 
 ## Quick start

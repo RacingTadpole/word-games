@@ -26,6 +26,8 @@ if __name__ == '__main__':
         if len(''.join(grid)) < 2:
             print('Goodbye!')
             exit()
+        if len(grid[-1]) == 0:
+            grid = grid[:-1]  # In case there was a trailing ,
         max_length = len(grid[0])
         min_length = 3
         print()
@@ -43,15 +45,15 @@ if __name__ == '__main__':
                 if row_key[col_index] == '?':
                     this_row_key = replace(row_key, col_index, letter)
                     row_choices = get_sorted_choices(this_row_key, words, frequency)
-                    row_score = sum(s.weighted_score for s in row_choices)
+                    row_score = sum(s.adjusted_score for s in row_choices)
                     col_key = ''.join(row[col_index] for row in grid)
                     this_col_key = replace(col_key, row_index, letter)
                     col_choices = get_sorted_choices(this_col_key, words, frequency)
-                    col_score = sum(s.weighted_score for s in col_choices)
+                    col_score = sum(s.adjusted_score for s in col_choices)
                     record[(row_index, col_index)] = {
                         'score': row_score + col_score,
-                        'row': [x.word for x in row_choices[:6]],
-                        'col': [x.word for x in col_choices[:6]],
+                        'row': [x.word for x in row_choices[-6:][::-1]],
+                        'col': [x.word for x in col_choices[-6:][::-1]],
                     }
         sorted_scores = sorted(record.items(), key=lambda t: t[1]['score'], reverse=True)
 

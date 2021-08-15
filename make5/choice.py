@@ -23,7 +23,7 @@ class Choice:
         self.subwords = tuple(r[1] for r in get_subwords(words, word))
         self.score = sum(get_score(w, max_length) for w in self.subwords)
         self.chance = 1 - (1 - get_chance(key, word, frequency)) ** (max_length * max_length)  # Improve
-        self.weighted_score = self.chance * self.score
+        self.adjusted_score = self.chance + 10 * self.score
 
 
 def get_sorted_choices(key: str, words: WordDict, frequency: FrequencyDict) -> Sequence[Choice]:
@@ -32,14 +32,14 @@ def get_sorted_choices(key: str, words: WordDict, frequency: FrequencyDict) -> S
     full_length_results = list(get_full_length_combos(subwords, length))
     partial_results = [pad_word(start_index, word, length)
         for start_index, word in subwords 
-        if len(word) != length]
+        if len(word) != length] # TODO: exclude results without the new letter
     results = partial_results + full_length_results
     choices = [Choice(word, key, 0, words, frequency) for word in results]
-    sorted_choices = sorted(choices, key=lambda s: s.weighted_score)
+    sorted_choices = sorted(choices, key=lambda s: s.adjusted_score)
     return sorted_choices
 
 
 def print_choices(sorted_choices: Sequence[Choice]) -> None:
     for s in sorted_choices:
-        print(f'{pad_word(s.start_index, s.word, s.max_length):5} {s.weighted_score:5.2f} {s.score:4} {(s.chance * 100):6.2f}%: {s.subwords}')
-    print(f'Total weighted score: {sum(s.weighted_score for s in sorted_choices):5.1f}')
+        print(f'{pad_word(s.start_index, s.word, s.max_length):5} {s.adjusted_score:5.2f} {s.score:4} {(s.chance * 100):6.2f}%: {s.subwords}')
+    print(f'Total adjusted score: {sum(s.adjusted_score for s in sorted_choices):5.1f}')
