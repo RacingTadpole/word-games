@@ -40,7 +40,7 @@ def get_chance(key: str, word: str, frequency: FrequencyDict, symbol: str = '?')
     """
     >>> import os
     >>> dir_path = os.path.dirname(os.path.realpath(__file__))
-    >>> frequency = read_frequencies(os.path.join(dir_path, 'frequencies.txt'))
+    >>> frequency = read_frequencies(os.path.join(dir_path, 'tiles.txt'))
     >>> get_chance('???f?', 'loafs', frequency)
     9.6e-06
     >>> get_chance('???f?', '?oafs', frequency)
@@ -87,7 +87,7 @@ def read_frequencies(path: str) -> FrequencyDict:
     """
     >>> import os
     >>> dir_path = os.path.dirname(os.path.realpath(__file__))
-    >>> freq = read_frequencies(os.path.join(dir_path, 'frequencies.txt'))
+    >>> freq = read_frequencies(os.path.join(dir_path, 'tiles.txt'))
     >>> freq['a'], freq['z']
     (0.1, 0.02)
     """

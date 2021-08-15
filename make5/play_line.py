@@ -5,7 +5,7 @@ from make5.compile_words import read_words
 
 if __name__ == '__main__':
     words = read_words('./data/words.txt')
-    frequency = read_frequencies('./make5/frequencies.txt')
+    frequency = read_frequencies('./make5/tiles.txt')
 
     while True:
         print()
