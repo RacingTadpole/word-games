@@ -1,4 +1,4 @@
-from make5.utilities import read_frequencies, get_chance, get_subwords, get_complete_choices
+from make5.utilities import read_frequencies, get_chance, get_subwords, get_full_length_combos
 from make5.compile_words import read_words
 from make5.types import FrequencyDict, WordDict
 
@@ -31,11 +31,27 @@ class Choice:
         self.weighted_score = self.chance * self.score
 
 
+def print_combos(key: str, words: WordDict, frequency: FrequencyDict):
+    length = len(key)
+    subwords = list(get_subwords(words, key))
+    full_length_results = list(get_full_length_combos(subwords, length))
+    partial_results = [pad_word(start_index, word, length)
+        for start_index, word in subwords 
+        if len(word) != length]
+    results = partial_results + full_length_results
+    choices = [Choice(word, key, 0, words, frequency) for word in results]
+    sorted_choices = sorted(choices, key=lambda s: s.weighted_score)
+    for s in sorted_choices:
+        print(f'{s.padded_word:5} {s.weighted_score:5.2f} {s.score:4} {(s.chance * 100):6.2f}%: {s.subwords}')
+    print(f'Total weighted score: {sum(s.weighted_score for s in choices):5.1f}')
+
+
 if __name__ == '__main__':
     words = read_words('./data/words.txt')
     frequency = read_frequencies('./make5/frequencies.txt')
 
     while True:
+        print()
         key = input('Enter an expression, eg. ".re..": ')
         key = key.replace('.', '?')
         if not key:
@@ -44,26 +60,11 @@ if __name__ == '__main__':
         letter = input('Enter the new letter (if any): ')
         print()
 
-        if not letter:
-            # not DRY
-            this_key = key
-            results = get_complete_choices(this_key, words)
-            choices = [Choice(word, this_key, 0, words, frequency) for word in results]
-            sorted_choices = sorted(choices, key=lambda s: s.weighted_score)
-            for s in sorted_choices:
-                print(f'{s.padded_word:5} {s.weighted_score:5.2f} {s.score:4} {(s.chance * 100):6.2f}%: {s.subwords}')
-            print(f'Total weighted score: {sum(s.weighted_score for s in choices):5.1f}')
-            break
-
-        for position in range(len(key)):
-            if key[position] == '?':
-                this_key = ''.join(letter if i == position else key[i] for i in range(len(key)))
-
-                print(this_key)
-                results = get_complete_choices(this_key, words)
-                choices = [Choice(word, this_key, 0, words, frequency) for word in results]
-                sorted_choices = sorted(choices, key=lambda s: s.weighted_score)
-                for s in sorted_choices:
-                    print(f'{s.padded_word:5} {s.weighted_score:5.2f} {s.score:4} {(s.chance * 100):6.2f}%: {s.subwords}')
-                print(f'Total weighted score: {sum(s.weighted_score for s in choices):5.1f}')
-                print()
+        if letter:
+            for position in range(len(key)):
+                if key[position] == '?':
+                    this_key = ''.join(letter if i == position else key[i] for i in range(len(key)))
+                    print(this_key)
+                    print_combos(this_key, words, frequency)
+        else:
+            print_combos(key, words, frequency)

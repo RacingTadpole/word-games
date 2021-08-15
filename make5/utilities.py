@@ -53,24 +53,23 @@ def get_chance(key: str, word: str, frequency: FrequencyDict, symbol: str = '?')
     return x
 
 
-def get_complete_choices(key: str, words: WordDict) -> Iterator[str]:
+def get_full_length_combos(subwords: Iterator[Tuple[int, str]], full_length: int) -> Iterator[str]:
     """
+    This returns key-length combinations that make more than one word.
+    Ie. it is missing the single words which do not fit with any others.
     >>> from .utilities import _get_test_words
-    >>> get_complete_choices('??og?', _get_test_words())
+    >>> subwords = get_subwords(_get_test_words(), '??og?')
+    >>> get_full_length_combos(subwords, 5)
     ['blogs', 'clogs', 'slogs', 'adogs', 'blogo', 'clogo', 'slogo']
     """
-    # TODO: this is missing the single words which may not fit any others,
-    # eg. 'toog*'.
-    length = len(key)
-    results = get_subwords(words, key)
     d = defaultdict(list)
-    for start_index, word in results:
+    for start_index, word in subwords:
         d[(start_index, len(word))].append(word)
     # d[(0, length)] are the solutions so far.
-    for min_length_so_far in range(2, length):
+    for min_length_so_far in range(2, full_length):
         for w in d.get((0, min_length_so_far), []):
-            for start_index in range(1, length - 1):
-                for comparison_length in range(min_length_so_far - start_index + 1, length):
+            for start_index in range(1, full_length - 1):
+                for comparison_length in range(min_length_so_far - start_index + 1, full_length):
                     for w2 in d.get((start_index, comparison_length), []):
                         # print((0, min_length_so_far, w), (start_index, comparison_length, w2), list(range(start_index, min_length_so_far)))
                         if all(w[i] == w2[i - start_index] for i in range(start_index, min_length_so_far)):
@@ -81,7 +80,7 @@ def get_complete_choices(key: str, words: WordDict) -> Iterator[str]:
                             if new_combo not in d[new_key]:
                                 # print(new_key, new_combo)
                                 d[new_key].append(new_combo)
-    return d[(0, length)]
+    return d[(0, full_length)]
 
 
 def read_frequencies(path: str) -> FrequencyDict:
