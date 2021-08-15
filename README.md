@@ -73,18 +73,40 @@ party → pasty → paste → passe → posse → poise → prise → prose → 
 This is still a work in progress, but you can do the following:
 
 ```
-python -m make5.play_line
+python -m make5.solve
 
-Enter an expression, eg. "?rea?": ???f?
-...
-theft   12: ('the', 'heft', 'theft')
-waifs   12: ('ifs', 'waif', 'waifs')
-cleft   13: ('clef', 'left', 'cleft')
-loafs   16: ('oaf', 'loaf', 'oafs', 'loafs')
+Enter your grid with commas between rows, and . for empty (eg. .....,...n.,f..a.,t..nk,....s)
+? .....,...n.,f..a.,t..nk,....s
+
+                  01234
+                0 ?????
+                1 ???N?
+                2 F??A?
+                3 T??NK
+                4 ????S
+
+Enter the new letter: O
+
+Best locations (analysing depth 1):
+(1, 2):  72.1  upony  ufond  whonk  upond  muons  phony  /  comfy  bobby  poppy  youch  cocky  popup
+(1, 4):  53.8  hymn.  upon.  spun.  shun.  cyan.  faun.  /  bob..  bop..  bow..  box..  boy..  cob..
+(2, 1):  53.4  ..bap  ..bay  ..cab  ..cam  ..cap  ..caw  /  ufoxy  ufolk  ufoul  whock  chomp  smoky
+(4, 1):  50.6  bomb.  cock.  comb.  coup.  jock.  mock.  /  jumbo  bimbo  pluto  duomo  hippo  limbo
+(3, 1):  49.6  top..  tow..  toy..  .own.  tog..  ton..  /  buxom  bijou  yukon  phlox  bosom  fluor
 ```
 
-to get all the words matching a pattern "???f?", ranked by those containing the most subwords.
-The score shown for each is calculated using a score of 1 per letter.
+This shows the top few locations to place the letter, based on the expected scores of the rows and
+columns (weighted by the likelihood of getting the required letters).
+It does not yet consider the consequences of placing the letter on other rows and columns.
+
+You can also use:
+
+```
+python -m make5.play_line
+```
+
+to get all the words matching a pattern, ranked by their scores weighted by the likelihood of getting the remaining letters.
+The score shown for each is calculated using a score of 1 per letter per subword.
 
 ## Quick start
 
