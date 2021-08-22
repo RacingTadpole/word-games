@@ -1,5 +1,5 @@
-from typing import Sequence
-from make5.utilities import get_chance, get_subwords, get_full_length_combos
+from typing import Sequence, Union
+from make5.utilities import SYMBOL, get_chance, get_subwords, get_full_length_combos
 from make5.types import FrequencyDict, WordDict
 from make5.score import get_score
 
@@ -23,16 +23,18 @@ class Choice:
         self.subwords = tuple(r[1] for r in get_subwords(words, word))
         self.score = sum(get_score(w, max_length) for w in self.subwords)
         self.chance = 1 - (1 - get_chance(key, word, frequency)) ** (max_length * max_length)  # Improve
-        self.adjusted_score = self.chance + 10 * self.score
+        self.adjusted_score = self.chance * self.score
 
 
-def get_sorted_choices(key: str, words: WordDict, frequency: FrequencyDict) -> Sequence[Choice]:
+def get_sorted_choices(key: str, required_index: Union[int, None], words: WordDict, frequency: FrequencyDict) -> Sequence[Choice]:
     length = len(key)
-    subwords = list(get_subwords(words, key))
+    subwords = tuple(get_subwords(words, key))
     full_length_results = list(get_full_length_combos(subwords, length))
     partial_results = [pad_word(start_index, word, length)
         for start_index, word in subwords 
-        if len(word) != length] # TODO: exclude results without the new letter
+        if len(word) != length]
+    if required_index is not None:
+        partial_results = [word for word in partial_results if word[required_index] != SYMBOL]
     results = partial_results + full_length_results
     choices = [Choice(word, key, 0, words, frequency) for word in results]
     sorted_choices = sorted(choices, key=lambda s: s.adjusted_score)

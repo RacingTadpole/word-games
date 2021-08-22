@@ -1,6 +1,9 @@
 from collections import defaultdict
+from functools import lru_cache
 from typing import Iterator, Tuple
 from make5.types import FrequencyDict, WordDict
+
+SYMBOL = '?'
 
 def _get_test_words() -> WordDict:
     """
@@ -36,7 +39,7 @@ def get_subwords(words: WordDict, key: str, min_length: int = 3) -> Iterator[Tup
             for w in words.get(subkey, []))
 
 
-def get_chance(key: str, word: str, frequency: FrequencyDict, symbol: str = '?') -> float:
+def get_chance(key: str, word: str, frequency: FrequencyDict) -> float:
     """
     >>> import os
     >>> dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -48,12 +51,13 @@ def get_chance(key: str, word: str, frequency: FrequencyDict, symbol: str = '?')
     """
     x = 1
     for i in range(len(word)):
-        if key[i] == symbol:
+        if key[i] == SYMBOL:
             x = x * frequency.get(word[i], 1)
     return x
 
 
-def get_full_length_combos(subwords: Iterator[Tuple[int, str]], full_length: int) -> Iterator[str]:
+@lru_cache(maxsize=5000)
+def get_full_length_combos(subwords: Tuple[Tuple[int, str]], full_length: int) -> Iterator[str]:
     """
     This returns key-length combinations that make more than one word.
     Ie. it is missing the single words which do not fit with any others.
@@ -61,6 +65,9 @@ def get_full_length_combos(subwords: Iterator[Tuple[int, str]], full_length: int
     >>> subwords = get_subwords(_get_test_words(), '??og?')
     >>> get_full_length_combos(subwords, 5)
     ['blogs', 'clogs', 'slogs', 'adogs', 'blogo', 'clogo', 'slogo']
+    >>> subwords = get_subwords(_get_test_words(), '?????')
+    >>> get_full_length_combos(subwords, 5)
+    ['blogs', 'clogs', 'doggy', 'logos', 'skits', 'slogs', 'adogs', 'blogo', 'clogo', 'slogo']
     """
     d = defaultdict(list)
     for start_index, word in subwords:
