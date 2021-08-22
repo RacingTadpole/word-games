@@ -35,7 +35,18 @@ def get_crosshairs(
     allowed_letters: Optional[Sequence[str]],
     words: WordDict,
     frequency: FrequencyDict
-) -> dict[str, Crosshair]:
+) -> Dict[str, Crosshair]:
+    """
+    >>> from .utilities import _get_test_words
+    >>> import os
+    >>> dir_path = os.path.dirname(os.path.realpath(__file__))
+    >>> frequency = read_frequencies(os.path.join(dir_path, 'test_tiles.txt'))
+    >>> result = get_crosshairs('??og?', '?oo??', 0, 1, None, _get_test_words(), frequency)
+    >>> items = result.items()
+    >>> c = sorted(items, key=lambda x: x[1].score, reverse=True)
+    >>> [(cc[0], f'{cc[1].score:3.1f}', cc[1].row[:3], cc[1].col[:3]) for cc in c if cc[1].score > 0]
+    [('l', '31.7', ['.logo', '.logs', 'slog.'], ['loo..', 'look.']), ('d', '11.2', ['.dogs', '.dog.', 'ado..'], []), ('t', '6.7', ['.toga'], ['too..']), ('o', '4.3', ['too..', 'loo..'], [])]
+    """
     if allowed_letters is None:
         allowed_letters = ALL_LETTERS
     result_dict: dict[str, float] = {}
@@ -44,7 +55,6 @@ def get_crosshairs(
         row_choices = get_sorted_choices(this_row_key, col_index, words, frequency)
         row_score = sum(s.adjusted_score for s in row_choices)
 
-        col_key = ''.join(row[col_index] for row in grid)
         this_col_key = replace(col_key, row_index, letter)
         col_choices = get_sorted_choices(this_col_key, row_index, words, frequency)
         col_score = sum(s.adjusted_score for s in col_choices)
@@ -55,7 +65,6 @@ def get_crosshairs(
             [x.word for x in col_choices[-6:][::-1]]
         )
     return result_dict
-
 
 if __name__ == '__main__':
     words = read_words('./data/words.txt')
@@ -80,16 +89,26 @@ if __name__ == '__main__':
         letter = input('Enter the new letter: ').lower()
         print()
 
-        record: Dict[Tuple[int, int], Dict[str, Any]] = {}
+        record: Dict[Tuple[int, int], Dict[str, Crosshair]] = {}
         for row_index, row_key in enumerate(grid):
             for col_index in range(len(row_key)):
                 if row_key[col_index] == SYMBOL:
                     col_key = ''.join(row[col_index] for row in grid)
-                    record[(row_index, col_index)] = get_crosshairs(row_key, col_key, row_index, col_index, None, words, frequency)
+                    crosshair = get_crosshairs(row_key, col_key, row_index, col_index, None, words, frequency)
+                    other_items = [item for item in crosshair.items() if item[0] != letter]
+                    sorted_other_items = sorted(other_items, key=lambda x: x[1].score, reverse=True)
 
-        sorted_scores = sorted(record.items(), key=lambda t: t[1]['score'], reverse=True)
+                    best_increase = crosshair[letter].score - sorted_other_items[0][1].score
+                    record[(row_index, col_index)] = {
+                        'crosshair': crosshair,
+                        'best_increase': best_increase,
+                        'best_other_letter': sorted_other_items[0][0],
+                    }
+
+        sorted_increases = sorted(record.items(), key=lambda t: t[1]['best_increase'], reverse=True)
 
         print('Best locations (analysing depth 1):')
-        for coord, record in sorted_scores[:5]:
-            print(f'{coord}: {record.score:7.2f}  {"  ".join(record["row"])}  vs  {record["score_free"]:7.2f}  {"  ".join(record["row_free"])}')
-            print(f'                 {"  ".join(record["col"])}  vs  {record["score_free"]:7.2f}  {"  ".join(record["col_free"])}')
+        for coord, record in sorted_increases[:5]:
+            print(f'{coord}: {record["best_increase"]:6.2f} {record["crosshair"][letter].score: 7.2f}  {"  ".join(record["crosshair"][letter].row)}  vs  {record["best_other_letter"]}  {"  ".join(record["crosshair"][record["best_other_letter"]].row)}')
+            print(f'                        {"  ".join(record["crosshair"][letter].col)}  vs     {"  ".join(record["crosshair"][record["best_other_letter"]].col)}')
+

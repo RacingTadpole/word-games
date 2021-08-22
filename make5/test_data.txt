@@ -13,6 +13,8 @@ log
 logo
 logos
 logs
+loo
+look
 ski
 skit
 skits

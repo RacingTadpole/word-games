@@ -32,7 +32,7 @@ def get_subwords(words: WordDict, key: str, min_length: int = 3) -> Iterator[Tup
     >>> list(get_subwords(words, 'skits'))
     [(0, 'ski'), (1, 'kit'), (2, 'its'), (0, 'skit'), (1, 'kits'), (0, 'skits')]
     >>> [z[1] for z in get_subwords(words, '??ogs')]
-    ['ado', 'too', 'dog', 'log', 'blog', 'clog', 'slog', 'dogs', 'logs', 'blogs', 'clogs', 'slogs']
+    ['ado', 'loo', 'too', 'dog', 'log', 'blog', 'clog', 'slog', 'dogs', 'logs', 'blogs', 'clogs', 'slogs']
     """
     yield from (
         (start, w) for start, subkey in get_subsets(key, min_length)
