@@ -1,5 +1,4 @@
-from typing import Dict, Tuple
-from make5.crosshair import Crosshair, get_crosshairs
+from make5.calculate import calculate
 from make5.utilities import SYMBOL, read_frequencies
 from make5.compile_words import read_words
 
@@ -27,22 +26,7 @@ if __name__ == '__main__':
         letter = input('Enter the new letter: ').lower()
         print()
 
-        record: Dict[Tuple[int, int], Dict[str, Crosshair]] = {}
-        for row_index, row_key in enumerate(grid):
-            for col_index in range(len(row_key)):
-                if row_key[col_index] == SYMBOL:
-                    col_key = ''.join(row[col_index] for row in grid)
-                    crosshair = get_crosshairs(row_key, col_key, row_index, col_index, None, words, frequency)
-                    other_items = [item for item in crosshair.items() if item[0] != letter]
-                    sorted_other_items = sorted(other_items, key=lambda x: x[1].score, reverse=True)
-
-                    best_increase = crosshair[letter].score - sorted_other_items[0][1].score
-                    record[(row_index, col_index)] = {
-                        'crosshair': crosshair,
-                        'best_increase': best_increase,
-                        'best_other_letter': sorted_other_items[0][0],
-                    }
-
+        record = calculate(grid, letter, words, frequency)
         sorted_increases = sorted(record.items(), key=lambda t: t[1]['best_increase'], reverse=True)
 
         print('Best locations (analysing depth 1):')
