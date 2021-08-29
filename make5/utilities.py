@@ -1,9 +1,12 @@
+import os
+import hashlib
 from collections import defaultdict
 from functools import lru_cache
-from typing import Iterator, Tuple
+from typing import Iterator, Optional, Sequence, Tuple
 from make5.types import FrequencyDict, WordDict
 
 SYMBOL = '?'
+CACHE_TO_FILE_LENGTH = 800
 
 def replace(key: str, position: int, letter: str) -> str:
     """
@@ -22,7 +25,6 @@ def _get_test_words() -> WordDict:
     >>> _get_test_words()['?og']
     ['dog', 'log']
     """
-    import os
     from .compile_words import read_words
     dir_path = os.path.dirname(os.path.realpath(__file__))
     return read_words(os.path.join(dir_path, 'test_data.txt'))
@@ -53,7 +55,6 @@ def get_subwords(words: WordDict, key: str, min_length: int = 3) -> Iterator[Tup
 
 def get_chance(key: str, word: str, frequency: FrequencyDict) -> float:
     """
-    >>> import os
     >>> dir_path = os.path.dirname(os.path.realpath(__file__))
     >>> frequency = read_frequencies(os.path.join(dir_path, 'tiles.txt'))
     >>> get_chance('???f?', 'loafs', frequency)
@@ -68,19 +69,47 @@ def get_chance(key: str, word: str, frequency: FrequencyDict) -> float:
     return x
 
 
+def read_combos_from_file(subwords: Tuple[Tuple[int, str]], full_length: int, dir_name='make5/combos') -> Optional[Sequence[str]]:
+    m = hashlib.sha256()
+    m.update(f'subwords:{subwords}'.encode('utf-8'))
+    filename = f'{full_length}-{m.hexdigest()}.txt'
+    path = os.path.join(dir_name, filename)
+    os.makedirs(dir_name, exist_ok=True)
+    result = []
+    try:
+        with open(path, 'r') as f:
+            result = f.readlines()
+    except FileNotFoundError:
+        return None
+
+    return tuple(word.replace('\n', '') for word in result)
+
+
+def write_combos_to_file(subwords: Tuple[Tuple[int, str]], full_length: int, combos: Sequence[str], dir_name='make5/combos') -> None:
+    m = hashlib.sha256()
+    m.update(f'subwords:{subwords}'.encode('utf-8'))
+    path = os.path.join(dir_name, f'{full_length}-{m.hexdigest()}.txt')
+    with open(path, 'w') as f:
+        f.writelines(tuple(f'{combo}\n' for combo in combos))
+
+
 @lru_cache(maxsize=5000)
-def get_full_length_combos(subwords: Tuple[Tuple[int, str]], full_length: int) -> Iterator[str]:
+def get_full_length_combos(subwords: Tuple[Tuple[int, str]], full_length: int) -> Sequence[str]:
     """
     This returns key-length combinations that make more than one word.
     Ie. it is missing the single words which do not fit with any others.
     >>> from .utilities import _get_test_words
-    >>> subwords = get_subwords(_get_test_words(), '??og?')
+    >>> subwords = tuple(get_subwords(_get_test_words(), '??og?'))
     >>> get_full_length_combos(subwords, 5)
     ['blogs', 'clogs', 'slogs', 'adogs', 'blogo', 'clogo', 'slogo']
-    >>> subwords = get_subwords(_get_test_words(), '?????')
+    >>> subwords = tuple(get_subwords(_get_test_words(), '?????'))
     >>> get_full_length_combos(subwords, 5)
     ['blogs', 'clogs', 'doggy', 'logos', 'skits', 'slogs', 'adogs', 'blogo', 'clogo', 'slogo']
     """
+    if len(subwords) > CACHE_TO_FILE_LENGTH:
+        from_file = read_combos_from_file(subwords, full_length)
+        if from_file:
+            return from_file
     d = defaultdict(list)
     for start_index, word in subwords:
         d[(start_index, len(word))].append(word)
@@ -99,7 +128,11 @@ def get_full_length_combos(subwords: Tuple[Tuple[int, str]], full_length: int) -
                             if new_combo not in d[new_key]:
                                 # print(new_key, new_combo)
                                 d[new_key].append(new_combo)
-    return d[(0, full_length)]
+
+    result = d[(0, full_length)]
+    if len(subwords) > CACHE_TO_FILE_LENGTH:
+        write_combos_to_file(subwords, full_length, result)
+    return result
 
 
 def read_frequencies(path: str) -> FrequencyDict:
