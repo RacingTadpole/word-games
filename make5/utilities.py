@@ -5,6 +5,18 @@ from make5.types import FrequencyDict, WordDict
 
 SYMBOL = '?'
 
+def replace(key: str, position: int, letter: str) -> str:
+    """
+    >>> replace('floop', 0, 'p')
+    'ploop'
+    >>> replace('floop', 3, 'r')
+    'florp'
+    >>> replace('floop', 4, 'r')
+    'floor'
+    """
+    return key[:position] + letter + key[position + 1:]
+
+
 def _get_test_words() -> WordDict:
     """
     >>> _get_test_words()['?og']
