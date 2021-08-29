@@ -31,6 +31,6 @@ if __name__ == '__main__':
 
         print('Best locations (analysing depth 1):')
         for coord, record in sorted_increases[:5]:
-            print(f'{coord}: {record["best_increase"]:6.2f} {record["crosshair"][letter].score: 7.2f}  {"  ".join(record["crosshair"][letter].row)}  vs  {record["best_other_letter"]}  {"  ".join(record["crosshair"][record["best_other_letter"]].row)}')
-            print(f'                        {"  ".join(record["crosshair"][letter].col)}  vs     {"  ".join(record["crosshair"][record["best_other_letter"]].col)}')
+            print(f'{coord}: {record["best_increase"]:6.2f} {record["crosshair"].score: 7.2f}  {"  ".join(record["crosshair"].row)}  vs  {record["best_other_crosshair"].letter}  {"  ".join(record["best_other_crosshair"].row)}')
+            print(f'                        {"  ".join(record["crosshair"].col)}  vs     {"  ".join(record["best_other_crosshair"].col)}')
 
